@@ -11,8 +11,8 @@ import javax.persistence.OneToMany
 data class Sentence(
     @Id var id: UUID,
     var content: String,
-    var precisionLabels: IntArray,
-    var recallLabels: IntArray,
+    var precisionLabels: IntArray?,
+    var recallLabels: IntArray?,
     @ManyToOne var report: Report,
     @OneToMany(mappedBy = "sentence") var fragments: MutableSet<Fragment>
 )

@@ -1,14 +1,14 @@
 
 CREATE TABLE study (
     id uuid,
-    title varchar(256),
+    title varchar(256) NOT NULL,
     CONSTRAINT study_pk PRIMARY KEY (id)
 );
 
 CREATE TABLE report (
     id uuid,
-    title varchar(256),
-    pdfData bytea
+    title varchar(256) NOT NULL,
+    pdfData bytea NOT NULL,
     CONSTRAINT report_pk PRIMARY KEY (id)
 );
 
@@ -22,8 +22,8 @@ CREATE TABLE study_report (
 
 CREATE TABLE sentence (
     id uuid,
-    report uuid,
-    content varchar(512),
+    report uuid NOT NULL,
+    content varchar(512) NOT NULL,
     precisionLabels integer[],
     recallLabels integer[],
     CONSTRAINT sentence_pk PRIMARY KEY (id),
@@ -32,12 +32,12 @@ CREATE TABLE sentence (
 
 CREATE TABLE fragment (
     id uuid,
-    sentence uuid,
-    pageNo integer,
-    x1 double precision,
-    x2 double precision,
-    y1 double precision,
-    y2 double precision,
+    sentence uuid NOT NULL,
+    pageNo integer NOT NULL,
+    x1 double precision NOT NULL,
+    x2 double precision NOT NULL,
+    y1 double precision NOT NULL,
+    y2 double precision NOT NULL,
     CONSTRAINT fragment_pk PRIMARY KEY (id),
     CONSTRAINT fragment_fk_sentence FOREIGN KEY (sentence) REFERENCES sentence (id)
 );
