@@ -17,6 +17,7 @@ repositories {
 }
 
 dependencies {
+	implementation("io.arrow-kt:arrow-core:0.13.1")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-web")
