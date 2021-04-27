@@ -28,4 +28,16 @@ CREATE TABLE sentence (
     recallLabels integer[],
     CONSTRAINT sentence_pk PRIMARY KEY (id),
     CONSTRAINT sentence_fk_report FOREIGN KEY (report) REFERENCES report (id)
-)
+);
+
+CREATE TABLE fragment (
+    id uuid,
+    sentence uuid,
+    pageNo integer,
+    x1 double precision,
+    x2 double precision,
+    y1 double precision,
+    y2 double precision,
+    CONSTRAINT fragment_pk PRIMARY KEY (id),
+    CONSTRAINT fragment_fk_sentence FOREIGN KEY (sentence) REFERENCES sentence (id)
+);
