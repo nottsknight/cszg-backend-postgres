@@ -5,8 +5,10 @@ import java.util.*
 import javax.persistence.Entity
 import javax.persistence.Id
 import javax.persistence.ManyToOne
+import javax.persistence.Table
 
 @Entity
+@Table(name = "fragment")
 data class Fragment(
     @Id var id: UUID = UUID.randomUUID(),
     var pageNo: Int,

@@ -2,12 +2,10 @@ package uk.ac.nott.cs.das.cszgbackend.model.study
 
 import org.springframework.data.repository.CrudRepository
 import java.util.*
-import javax.persistence.Entity
-import javax.persistence.Id
-import javax.persistence.ManyToMany
-import javax.persistence.OneToMany
+import javax.persistence.*
 
 @Entity
+@Table(name = "report")
 data class Report(
     @Id var id: UUID = UUID.randomUUID(),
     var title: String,

@@ -5,6 +5,7 @@ import java.util.*
 import javax.persistence.*
 
 @Entity
+@Table(name = "study")
 data class Study(
     @Id var id: UUID = UUID.randomUUID(),
     var title: String,
