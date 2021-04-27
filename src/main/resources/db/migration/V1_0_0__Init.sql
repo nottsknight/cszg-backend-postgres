@@ -19,3 +19,13 @@ CREATE TABLE study_report (
     CONSTRAINT study_report_fk_study FOREIGN KEY (studyId) REFERENCES study (id),
     CONSTRAINT study_report_fk_report FOREIGN KEY (reportId) REFERENCES report (id)
 );
+
+CREATE TABLE sentence (
+    id uuid,
+    report uuid,
+    content varchar(512),
+    precisionLabels integer[],
+    recallLabels integer[],
+    CONSTRAINT sentence_pk PRIMARY KEY (id),
+    CONSTRAINT sentence_fk_report FOREIGN KEY (report) REFERENCES report (id)
+)
