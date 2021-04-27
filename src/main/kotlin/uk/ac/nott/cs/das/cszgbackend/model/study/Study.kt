@@ -6,7 +6,7 @@ import javax.persistence.*
 
 @Entity
 data class Study(
-    @Id var id: UUID,
+    @Id var id: UUID = UUID.randomUUID(),
     var title: String,
     @ManyToMany
     @JoinTable(
@@ -15,6 +15,15 @@ data class Study(
         inverseJoinColumns = [JoinColumn(name = "reportId")]
     )
     var reports: MutableSet<Report>
-)
+) {
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        return id == (other as Study).id
+    }
+
+    override fun hashCode() = id.hashCode()
+}
 
 interface StudyRepository : CrudRepository<Study, UUID>

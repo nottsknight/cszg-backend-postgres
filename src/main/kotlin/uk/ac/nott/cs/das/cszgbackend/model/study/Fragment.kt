@@ -8,13 +8,22 @@ import javax.persistence.ManyToOne
 
 @Entity
 data class Fragment(
-    @Id var id: UUID,
+    @Id var id: UUID = UUID.randomUUID(),
     var pageNo: Int,
     var x1: Double,
     var y1: Double,
     var x2: Double,
     var y2: Double,
     @ManyToOne var sentence: Sentence
-)
+) {
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        return id == (other as Fragment).id
+    }
+
+    override fun hashCode() = id.hashCode()
+}
 
 interface FragmentRepository : CrudRepository<Fragment, UUID>
