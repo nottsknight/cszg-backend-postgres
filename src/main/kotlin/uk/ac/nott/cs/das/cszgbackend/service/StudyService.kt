@@ -1,5 +1,6 @@
 package uk.ac.nott.cs.das.cszgbackend.service
 
+import arrow.core.Either
 import arrow.core.computations.either
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -12,23 +13,38 @@ import uk.ac.nott.cs.das.cszgbackend.modelx.findByIdFx
 import uk.ac.nott.cs.das.cszgbackend.modelx.saveFx
 import java.util.*
 
+interface StudyService {
+    fun getAllStudies(): Either<ResponseStatusException, Iterable<Study>>
+    fun getStudy(id: UUID): Either<ResponseStatusException, Study>
+    fun addStudy(study: Study): Either<ResponseStatusException, Study>
+    fun getAllReports(): Either<ResponseStatusException, Iterable<Report>>
+    fun getReportsForStudy(id: UUID): Either<ResponseStatusException, Iterable<Report>>
+    fun getReport(id: UUID): Either<ResponseStatusException, Report>
+    fun addReport(report: Report): Either<ResponseStatusException, Report>
+    suspend fun associateStudyReport(studyId: UUID, reportId: UUID): Either<ResponseStatusException, Pair<UUID, UUID>>
+}
+
 @Service
-class StudyService(private val studyRepo: StudyRepository, private val reportRepo: ReportRepository) {
-    fun getAllStudies() = studyRepo.findAllFx()
+class StudyServiceImpl(
+    private val studyRepo: StudyRepository,
+    private val reportRepo: ReportRepository
+) : StudyService {
 
-    fun getStudy(id: UUID) = studyRepo.findByIdFx(id)
+    override fun getAllStudies() = studyRepo.findAllFx()
 
-    fun addStudy(study: Study) = studyRepo.saveFx(study)
+    override fun getStudy(id: UUID) = studyRepo.findByIdFx(id)
 
-    fun getAllReports() = reportRepo.findAllFx()
+    override fun addStudy(study: Study) = studyRepo.saveFx(study)
 
-    fun getReportsForStudy(id: UUID) = studyRepo.findByIdFx(id).map { it.reports }
+    override fun getAllReports() = reportRepo.findAllFx()
 
-    fun getReport(id: UUID) = reportRepo.findByIdFx(id)
+    override fun getReportsForStudy(id: UUID) = studyRepo.findByIdFx(id).map { it.reports }
 
-    fun addReport(report: Report) = reportRepo.saveFx(report)
+    override fun getReport(id: UUID) = reportRepo.findByIdFx(id)
 
-    suspend fun associateStudyReport(studyId: UUID, reportId: UUID) =
+    override fun addReport(report: Report) = reportRepo.saveFx(report)
+
+    override suspend fun associateStudyReport(studyId: UUID, reportId: UUID) =
         either<ResponseStatusException, Pair<UUID, UUID>> {
             var study = studyRepo.findByIdFx(studyId).bind()
             var report = reportRepo.findByIdFx(reportId).bind()

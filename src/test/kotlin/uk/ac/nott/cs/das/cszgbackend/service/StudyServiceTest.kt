@@ -32,7 +32,7 @@ class StudyServiceTest {
 
     @BeforeEach
     fun setUp() {
-        service = StudyService(studyRepo, reportRepo)
+        service = StudyServiceImpl(studyRepo, reportRepo)
     }
 
     @Nested
