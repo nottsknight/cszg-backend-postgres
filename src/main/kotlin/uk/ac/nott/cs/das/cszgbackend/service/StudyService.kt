@@ -21,7 +21,10 @@ interface StudyService {
     fun getReportsForStudy(id: UUID): Either<ResponseStatusException, Iterable<Report>>
     fun getReport(id: UUID): Either<ResponseStatusException, Report>
     fun addReport(report: Report): Either<ResponseStatusException, Report>
-    suspend fun associateStudyReport(studyId: UUID, reportId: UUID): Either<ResponseStatusException, Pair<UUID, UUID>>
+    suspend fun associateStudyReport(
+        studyId: UUID,
+        reportId: UUID
+    ): Either<ResponseStatusException, Pair<Study, Report>>
 }
 
 @Service
@@ -45,7 +48,7 @@ class StudyServiceImpl(
     override fun addReport(report: Report) = reportRepo.saveFx(report)
 
     override suspend fun associateStudyReport(studyId: UUID, reportId: UUID) =
-        either<ResponseStatusException, Pair<UUID, UUID>> {
+        either<ResponseStatusException, Pair<Study, Report>> {
             var study = studyRepo.findByIdFx(studyId).bind()
             var report = reportRepo.findByIdFx(reportId).bind()
 
@@ -53,6 +56,6 @@ class StudyServiceImpl(
             report.studies.add(study)
             study = studyRepo.saveFx(study).bind()
             report = reportRepo.saveFx(report).bind()
-            Pair(study.id, report.id)
+            Pair(study, report)
         }
 }
