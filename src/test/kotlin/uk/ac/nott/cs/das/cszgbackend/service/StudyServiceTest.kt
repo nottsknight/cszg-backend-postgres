@@ -12,6 +12,7 @@ import uk.ac.nott.cs.das.cszgbackend.model.study.ReportRepository
 import uk.ac.nott.cs.das.cszgbackend.model.study.Study
 import uk.ac.nott.cs.das.cszgbackend.model.study.StudyRepository
 import uk.ac.nott.cs.das.cszgbackend.modelx.findAllFx
+import java.io.IOException
 import java.util.*
 import kotlin.test.assertEquals
 
@@ -105,6 +106,32 @@ class StudyServiceTest {
 
             study as Either.Left
             assertEquals(HttpStatus.NOT_FOUND, study.value.status)
+        }
+    }
+
+    @Nested
+    @DisplayName("When repo fails to read data")
+    inner class RepoBroken {
+        @Test
+        @DisplayName("Then getAllStudies returns a 500 error")
+        fun getAllStudies() {
+            every { studyRepo.findAll() } throws IOException()
+            val studies = service.getAllStudies()
+            assertTrue { studies is Either.Left }
+
+            studies as Either.Left
+            assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, studies.value.status)
+        }
+
+        @Test
+        @DisplayName("Then getStudy returns a 500 error")
+        fun getStudy() {
+            every { studyRepo.findById(any()) } throws IOException()
+            val study = service.getStudy(UUID.randomUUID())
+            assertTrue(study is Either.Left)
+
+            study as Either.Left
+            assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, study.value.status)
         }
     }
 }
