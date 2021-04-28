@@ -19,3 +19,10 @@ fun <T : Any, ID : Any> CrudRepository<T, ID>.findByIdFx(id: ID) =
     } catch (e: Exception) {
         Either.Left(ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.localizedMessage, e))
     }
+
+fun <T : Any, ID : Any> CrudRepository<T, ID>.saveFx(entity: T) =
+    try {
+        Either.Right(save(entity))
+    } catch (e: Exception) {
+        Either.Left(ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.localizedMessage, e))
+    }
