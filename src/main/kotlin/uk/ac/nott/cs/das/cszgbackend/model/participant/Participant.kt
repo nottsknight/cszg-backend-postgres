@@ -16,7 +16,8 @@ data class Participant(
     var validFrom: Calendar?,
     var validTo: Calendar?,
     @OneToOne(mappedBy = "participant") var ati: ParticipantAti?,
-    @OneToMany(mappedBy = "participant") var tlx: MutableSet<ParticipantTlx>
+    @OneToMany(mappedBy = "participant") var tlx: MutableSet<ParticipantTlx>,
+    @OneToMany(mappedBy = "participant") var trust: MutableSet<ParticipantTrust>
 )
 
 interface ParticipantRepository : CrudRepository<Participant, UUID>

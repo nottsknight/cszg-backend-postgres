@@ -86,3 +86,21 @@ CREATE TABLE tlx (
     CONSTRAINT tlx_fk_participant FOREIGN KEY (participant) REFERENCES participant (id),
     CONSTRAINT tlx_uq_participant_taskNo UNIQUE (participant, taskNo)
 );
+
+CREATE TABLE trust (
+    id uuid,
+    participant uuid,
+    taskNo integer,
+    response1 integer,
+    response2 integer,
+    response3 integer,
+    response4 integer,
+    response5 integer,
+    response6 integer,
+    response7 integer,
+    response8 integer,
+    response9 integer,
+    CONSTRAINT trust_pk PRIMARY KEY (id),
+    CONSTRAINT trust_fk_participant FOREIGN KEY (participant) REFERENCES participant (id),
+    CONSTRAINT trust_uq_participant_taskNo UNIQUE (participant, taskNo)
+);
