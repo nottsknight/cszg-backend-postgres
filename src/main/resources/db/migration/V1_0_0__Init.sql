@@ -41,3 +41,16 @@ CREATE TABLE fragment (
     CONSTRAINT fragment_pk PRIMARY KEY (id),
     CONSTRAINT fragment_fk_sentence FOREIGN KEY (sentence) REFERENCES sentence (id)
 );
+
+CREATE TABLE participant (
+    id uuid,
+    username char(4),
+    age integer,
+    gender char(1),
+    genderDescription varchar(256),
+    passwordHash char(60),
+    validFrom timestamp,
+    validTo timestamp,
+    CONSTRAINT participant_pk PRIMARY KEY (id),
+    CONSTRAINT participant_uq_username UNIQUE (username)
+);
