@@ -22,6 +22,16 @@ data class ParticipantTrust(
     var response7: Int,
     var response8: Int,
     var response9: Int
-)
+) {
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        return id == (other as ParticipantTrust).id
+    }
+
+    override fun hashCode() = id.hashCode()
+}
 
 interface ParticipantTrustRepository : CrudRepository<ParticipantTrust, UUID>

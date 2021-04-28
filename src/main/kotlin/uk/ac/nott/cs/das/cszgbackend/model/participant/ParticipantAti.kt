@@ -21,6 +21,16 @@ data class ParticipantAti(
     var response7: Int,
     var response8: Int,
     var response9: Int
-)
+) {
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        return id == (other as ParticipantAti).id
+    }
+
+    override fun hashCode() = id.hashCode()
+}
 
 interface ParticipantAtiRepository : CrudRepository<ParticipantAti, UUID>

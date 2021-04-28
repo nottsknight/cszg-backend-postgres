@@ -18,6 +18,16 @@ data class Participant(
     @OneToOne(mappedBy = "participant") var ati: ParticipantAti?,
     @OneToMany(mappedBy = "participant") var tlx: MutableSet<ParticipantTlx>,
     @OneToMany(mappedBy = "participant") var trust: MutableSet<ParticipantTrust>
-)
+) {
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        return id == (other as Participant).id
+    }
+
+    override fun hashCode()= id.hashCode()
+}
 
 interface ParticipantRepository : CrudRepository<Participant, UUID>

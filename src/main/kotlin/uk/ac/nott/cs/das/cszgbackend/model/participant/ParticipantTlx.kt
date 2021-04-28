@@ -19,6 +19,16 @@ data class ParticipantTlx(
     var effort: Int,
     var performance: Int,
     var frustration: Int
-)
+) {
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        return id == (other as ParticipantTlx).id
+    }
+
+    override fun hashCode()= id.hashCode()
+}
 
 interface ParticipantTlxRepository : CrudRepository<ParticipantTlx, UUID>
