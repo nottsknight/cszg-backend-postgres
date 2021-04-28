@@ -4,6 +4,7 @@ import arrow.core.Either
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -29,10 +30,19 @@ class StudyServiceTest {
     private lateinit var reportRepo: ReportRepository
 
     private lateinit var service: StudyService
+    private lateinit var dummyStudy: Study
+    private lateinit var dummyReport: Report
 
     @BeforeEach
     fun setUp() {
         service = StudyServiceImpl(studyRepo, reportRepo)
+        dummyStudy = Study(title = "test", reports = mutableSetOf())
+        dummyReport = Report(
+            title = "Test",
+            pdfData = ByteArray(10) { i -> i.toByte() },
+            studies = mutableSetOf(),
+            sentences = mutableSetOf()
+        )
     }
 
     @Nested
@@ -44,12 +54,13 @@ class StudyServiceTest {
             @Test
             @DisplayName("Then getAllStudies returns all the studies")
             fun getAllStudies() {
-                every { studyRepo.findAll() } returns mutableListOf(Study(title = "Test", reports = mutableSetOf()))
+                every { studyRepo.findAll() } returns mutableListOf(dummyStudy)
                 val studies = service.getAllStudies()
                 assertTrue { studies is Either.Right }
 
                 studies as Either.Right
                 assertEquals(1, studies.value.count())
+                assertTrue { studies.value.contains(dummyStudy) }
             }
 
             @Nested
@@ -143,13 +154,6 @@ class StudyServiceTest {
     @Nested
     @DisplayName("Given ReportRepository")
     inner class ReportRepo {
-        private val dummyReport = Report(
-            title = "Test",
-            pdfData = ByteArray(10) { i -> i.toByte() },
-            studies = mutableSetOf(),
-            sentences = mutableSetOf()
-        )
-
         @Nested
         @DisplayName("When repo has data")
         inner class HasData {
@@ -186,5 +190,60 @@ class StudyServiceTest {
         @Nested
         @DisplayName("When repo is broken")
         inner class RepoBroken
+    }
+
+    @Nested
+    @DisplayName("When associateStudyReport")
+    inner class AssociateStudyReport {
+        @Nested
+        @DisplayName("When both resources exist")
+        inner class BothExist {
+            @Test
+            @DisplayName("Then study and report are returned")
+            fun associateStudyReport() = runBlocking {
+                every { studyRepo.findById(dummyStudy.id) } returns Optional.of(dummyStudy)
+                every { studyRepo.save(any()) } answers { args[0] as Study }
+                every { reportRepo.findById(dummyReport.id) } returns Optional.of(dummyReport)
+                every { reportRepo.save(any()) } answers { args[0] as Report }
+
+                val result = service.associateStudyReport(dummyStudy.id, dummyReport.id)
+                assertTrue { result is Either.Right }
+
+                val (study, report) = (result as Either.Right).value
+                assertTrue { study.reports.contains(dummyReport) }
+                assertTrue { report.studies.contains(dummyStudy) }
+            }
+        }
+
+        @Nested
+        @DisplayName("When study doesn't exist")
+        inner class StudyNotExist {
+            @Test
+            @DisplayName("Then return 404 error")
+            fun associateStudyReport() = runBlocking {
+                every { studyRepo.findById(any()) } returns Optional.empty()
+                val result = service.associateStudyReport(dummyStudy.id, dummyReport.id)
+                assertTrue { result is Either.Left }
+
+                result as Either.Left
+                assertEquals(HttpStatus.NOT_FOUND, result.value.status)
+            }
+        }
+
+        @Nested
+        @DisplayName("When report doesn't exist")
+        inner class ReportNotExist {
+            @Test
+            @DisplayName("Then return 404 error")
+            fun associateStudyReport() = runBlocking {
+                every { studyRepo.findById(any()) } returns Optional.of(dummyStudy)
+                every { reportRepo.findById(any()) } returns Optional.empty()
+                val result = service.associateStudyReport(dummyStudy.id, dummyReport.id)
+                assertTrue { result is Either.Left }
+
+                result as Either.Left
+                assertEquals(HttpStatus.NOT_FOUND, result.value.status)
+            }
+        }
     }
 }
