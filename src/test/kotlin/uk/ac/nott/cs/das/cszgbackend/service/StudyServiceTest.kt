@@ -53,7 +53,7 @@ class StudyServiceTest {
         inner class StudyHasData {
             @Test
             @DisplayName("Then getAllStudies returns all the studies")
-            fun getAllStudies() {
+            fun getAllStudies() = runBlocking {
                 every { studyRepo.findAll() } returns mutableListOf(dummyStudy)
                 val studies = service.getAllStudies()
                 assertTrue { studies is Either.Right }
@@ -68,7 +68,7 @@ class StudyServiceTest {
             inner class GoodUuid {
                 @Test
                 @DisplayName("Then getStudy returns the study")
-                fun getStudy() {
+                fun getStudy() = runBlocking {
                     val study = Study(title = "Test", reports = mutableSetOf())
                     every { studyRepo.findById(study.id) } returns Optional.of(study)
 
@@ -86,7 +86,7 @@ class StudyServiceTest {
             inner class BadUuid {
                 @Test
                 @DisplayName("Then getStudy returns 404 error")
-                fun getStudy() {
+                fun getStudy() = runBlocking {
                     every { studyRepo.findById(any()) } returns Optional.empty()
                     val retrievedStudy = service.getStudy(UUID.randomUUID())
                     assertTrue { retrievedStudy is Either.Left }
@@ -103,7 +103,7 @@ class StudyServiceTest {
         inner class StudyNoData {
             @Test
             @DisplayName("Then getAllStudies returns an empty iterable")
-            fun getAllStudies() {
+            fun getAllStudies() = runBlocking {
                 every { studyRepo.findAll() } returns mutableListOf()
                 val studies = service.getAllStudies()
                 assertTrue { studies is Either.Right }
@@ -114,7 +114,7 @@ class StudyServiceTest {
 
             @Test
             @DisplayName("Then getStudy returns a 404 error")
-            fun getStudy() {
+            fun getStudy() = runBlocking {
                 every { studyRepo.findById(any()) } returns Optional.empty()
                 val study = service.getStudy(UUID.randomUUID())
                 assertTrue { study is Either.Left }
@@ -129,7 +129,7 @@ class StudyServiceTest {
         inner class RepoBroken {
             @Test
             @DisplayName("Then getAllStudies returns a 500 error")
-            fun getAllStudies() {
+            fun getAllStudies() = runBlocking {
                 every { studyRepo.findAll() } throws IOException()
                 val studies = service.getAllStudies()
                 assertTrue { studies is Either.Left }
@@ -140,7 +140,7 @@ class StudyServiceTest {
 
             @Test
             @DisplayName("Then getStudy returns a 500 error")
-            fun getStudy() {
+            fun getStudy() = runBlocking {
                 every { studyRepo.findById(any()) } throws IOException()
                 val study = service.getStudy(UUID.randomUUID())
                 assertTrue(study is Either.Left)
@@ -159,7 +159,7 @@ class StudyServiceTest {
         inner class HasData {
             @Test
             @DisplayName("Then getAllReports should return the reports")
-            fun getAllReports() {
+            fun getAllReports() = runBlocking {
                 every { reportRepo.findAll() } returns listOf(dummyReport)
                 val reports = service.getAllReports()
                 assertTrue { reports is Either.Right }
@@ -170,7 +170,7 @@ class StudyServiceTest {
 
             @Test
             @DisplayName("Then getReport should return the report")
-            fun getReport() {
+            fun getReport() = runBlocking {
                 every { reportRepo.findById(dummyReport.id) } returns Optional.of(dummyReport)
                 val report = service.getReport(dummyReport.id)
                 assertTrue { report is Either.Right }
