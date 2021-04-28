@@ -4,11 +4,15 @@ import arrow.core.Either
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
-import org.junit.jupiter.api.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.ac.nott.cs.das.cszgbackend.model.study.ReportRepository
 import uk.ac.nott.cs.das.cszgbackend.model.study.StudyRepository
-import uk.ac.nott.cs.das.cszgbackend.modelx.findAllFx
+import kotlin.test.assertEquals
+import kotlin.test.fail
 
 @ExtendWith(MockKExtension::class)
 @DisplayName("Given StudyService")
@@ -35,7 +39,10 @@ class StudyServiceTest {
         fun getAllStudiesGood() {
             every { studyRepo.findAll() } returns mutableListOf()
             val studies = service.getAllStudies()
-            Assertions.assertEquals(Either.Right::class, studies::class)
+            when (studies) {
+                is Either.Left -> fail("Unexpected Left value")
+                is Either.Right -> assertEquals(0, studies.value.count())
+            }
         }
     }
 }
