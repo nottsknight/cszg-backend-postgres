@@ -4,14 +4,17 @@ import arrow.core.Either
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
-import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.http.HttpStatus
+import uk.ac.nott.cs.das.cszgbackend.model.study.Report
 import uk.ac.nott.cs.das.cszgbackend.model.study.ReportRepository
 import uk.ac.nott.cs.das.cszgbackend.model.study.Study
 import uk.ac.nott.cs.das.cszgbackend.model.study.StudyRepository
-import uk.ac.nott.cs.das.cszgbackend.modelx.findAllFx
 import java.io.IOException
 import java.util.*
 import kotlin.test.assertEquals
@@ -140,10 +143,41 @@ class StudyServiceTest {
     @Nested
     @DisplayName("Given ReportRepository")
     inner class ReportRepo {
+        private val dummyReport = Report(
+            title = "Test",
+            pdfData = ByteArray(10) { i -> i.toByte() },
+            studies = mutableSetOf(),
+            sentences = mutableSetOf()
+        )
 
         @Nested
         @DisplayName("When repo has data")
-        inner class HasData
+        inner class HasData {
+            @Test
+            @DisplayName("Then getAllReports should return the reports")
+            fun getAllReports() {
+                every { reportRepo.findAll() } returns listOf(dummyReport)
+                val reports = service.getAllReports()
+                assertTrue { reports is Either.Right }
+
+                reports as Either.Right
+                assertEquals(1, reports.value.count())
+            }
+
+            @Test
+            @DisplayName("Then getReport should return the report")
+            fun getReport() {
+                every { reportRepo.findById(dummyReport.id) } returns Optional.of(dummyReport)
+                val report = service.getReport(dummyReport.id)
+                assertTrue { report is Either.Right }
+
+                report as Either.Right
+                assertEquals("Test", report.value.title)
+                assertEquals(10, report.value.pdfData.size)
+                assertEquals(0, report.value.studies.size)
+                assertEquals(0, report.value.sentences.size)
+            }
+        }
 
         @Nested
         @DisplayName("When repo has no data")
