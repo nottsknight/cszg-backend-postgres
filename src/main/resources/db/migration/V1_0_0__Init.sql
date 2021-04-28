@@ -71,3 +71,18 @@ CREATE TABLE ati (
     CONSTRAINT ati_fk_participant FOREIGN KEY (participant) REFERENCES participant (id),
     CONSTRAINT ati_uq_participant UNIQUE (participant)
 );
+
+CREATE TABLE tlx (
+    id uuid,
+    participant uuid,
+    taskNo integer,
+    mentalDemand integer,
+    physicalDemand integer,
+    temporalDemand integer,
+    performance integer,
+    effort integer,
+    frustration integer,
+    CONSTRAINT tlx_pk PRIMARY KEY (id),
+    CONSTRAINT tlx_fk_participant FOREIGN KEY (participant) REFERENCES participant (id),
+    CONSTRAINT tlx_uq_participant_taskNo UNIQUE (participant, taskNo)
+);

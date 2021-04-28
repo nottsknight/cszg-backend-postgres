@@ -2,10 +2,7 @@ package uk.ac.nott.cs.das.cszgbackend.model.participant
 
 import org.springframework.data.repository.CrudRepository
 import java.util.*
-import javax.persistence.Entity
-import javax.persistence.Id
-import javax.persistence.OneToOne
-import javax.persistence.Table
+import javax.persistence.*
 
 @Entity
 @Table(name = "participant")
@@ -18,7 +15,8 @@ data class Participant(
     var passwordHash: String?,
     var validFrom: Calendar?,
     var validTo: Calendar?,
-    @OneToOne(mappedBy = "participant") var ati: ParticipantAti?
+    @OneToOne(mappedBy = "participant") var ati: ParticipantAti?,
+    @OneToMany(mappedBy = "participant") var tlx: MutableSet<ParticipantTlx>
 )
 
 interface ParticipantRepository : CrudRepository<Participant, UUID>
