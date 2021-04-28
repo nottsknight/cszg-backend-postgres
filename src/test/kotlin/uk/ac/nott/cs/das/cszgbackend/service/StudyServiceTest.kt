@@ -5,10 +5,15 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.extension.ExtendWith
+import org.springframework.http.HttpStatus
 import uk.ac.nott.cs.das.cszgbackend.model.study.ReportRepository
+import uk.ac.nott.cs.das.cszgbackend.model.study.Study
 import uk.ac.nott.cs.das.cszgbackend.model.study.StudyRepository
 import uk.ac.nott.cs.das.cszgbackend.modelx.findAllFx
+import java.util.*
+import kotlin.test.assertEquals
 
 @ExtendWith(MockKExtension::class)
 @DisplayName("Given StudyService")
@@ -32,10 +37,74 @@ class StudyServiceTest {
 
         @Test
         @DisplayName("Then getAllStudies returns all the studies")
-        fun getAllStudiesGood() {
+        fun getAllStudies() {
+            every { studyRepo.findAll() } returns mutableListOf(Study(title = "Test", reports = mutableSetOf()))
+            val studies = service.getAllStudies()
+            assertTrue { studies is Either.Right }
+
+            studies as Either.Right
+            assertEquals(1, studies.value.count())
+        }
+
+        @Nested
+        @DisplayName("When existing UUID is given")
+        inner class GoodUuid {
+            @Test
+            @DisplayName("Then getStudy returns the study")
+            fun getStudy() {
+                val study = Study(title = "Test", reports = mutableSetOf())
+                every { studyRepo.findById(study.id) } returns Optional.of(study)
+
+                val retrievedStudy = service.getStudy(study.id)
+                assertTrue { retrievedStudy is Either.Right }
+
+                retrievedStudy as Either.Right
+                assertEquals("Test", retrievedStudy.value.title)
+                assertEquals(0, retrievedStudy.value.reports.size)
+            }
+        }
+
+        @Nested
+        @DisplayName("When non-existent UUID is given")
+        inner class BadUuid {
+            @Test
+            @DisplayName("Then getStudy returns 404 error")
+            fun getStudy() {
+                every { studyRepo.findById(any()) } returns Optional.empty()
+                val retrievedStudy = service.getStudy(UUID.randomUUID())
+                assertTrue { retrievedStudy is Either.Left }
+
+                retrievedStudy as Either.Left
+                assertEquals(HttpStatus.NOT_FOUND, retrievedStudy.value.status)
+            }
+        }
+
+    }
+
+    @Nested
+    @DisplayName("When repo has no data")
+    inner class StudyNoData {
+
+        @Test
+        @DisplayName("Then getAllStudies returns an empty iterable")
+        fun getAllStudies() {
             every { studyRepo.findAll() } returns mutableListOf()
             val studies = service.getAllStudies()
-            Assertions.assertEquals(Either.Right::class, studies::class)
+            assertTrue { studies is Either.Right }
+
+            studies as Either.Right
+            assertEquals(0, studies.value.count())
+        }
+
+        @Test
+        @DisplayName("Then getStudy returns a 404 error")
+        fun getStudy() {
+            every { studyRepo.findById(any()) } returns Optional.empty()
+            val study = service.getStudy(UUID.randomUUID())
+            assertTrue { study is Either.Left }
+
+            study as Either.Left
+            assertEquals(HttpStatus.NOT_FOUND, study.value.status)
         }
     }
 }
