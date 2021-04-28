@@ -4,6 +4,7 @@ import org.springframework.data.repository.CrudRepository
 import java.util.*
 import javax.persistence.Entity
 import javax.persistence.Id
+import javax.persistence.OneToOne
 import javax.persistence.Table
 
 @Entity
@@ -16,7 +17,8 @@ data class Participant(
     var genderDescription: String?,
     var passwordHash: String?,
     var validFrom: Calendar?,
-    var validTo: Calendar?
+    var validTo: Calendar?,
+    @OneToOne(mappedBy = "participant") var ati: ParticipantAti?
 )
 
 interface ParticipantRepository : CrudRepository<Participant, UUID>
