@@ -27,7 +27,13 @@ data class Participant(
         return id == (other as Participant).id
     }
 
-    override fun hashCode()= id.hashCode()
+    override fun hashCode() = id.hashCode()
 }
+
+data class ParticipantBioDto(
+    var age: Int,
+    var gender: Char,
+    var genderDescription: String?
+)
 
 interface ParticipantRepository : CrudRepository<Participant, UUID>

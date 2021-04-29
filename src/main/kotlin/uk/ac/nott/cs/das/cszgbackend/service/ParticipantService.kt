@@ -14,6 +14,7 @@ interface ParticipantService {
     suspend fun getAllParticipants(): Either<ResponseStatusException, Iterable<Participant>>
     suspend fun getParticipant(id: UUID): Either<ResponseStatusException, Participant>
     suspend fun createParticipant(p: Participant): Either<ResponseStatusException, Participant>
+    suspend fun setParticipantBio(id: UUID, bio: ParticipantBioDto): Either<ResponseStatusException, Participant>
     suspend fun setParticipantAti(id: UUID, ati: ParticipantAti): Either<ResponseStatusException, Participant>
     suspend fun setParticipantTlx(id: UUID, tlx: ParticipantTlx): Either<ResponseStatusException, Participant>
     suspend fun setParticipantTrust(id: UUID, trust: ParticipantTrust): Either<ResponseStatusException, Participant>
@@ -43,6 +44,15 @@ class ParticipantServiceImpl(
         p.ati = savedAti
         participantRepo.saveFx(p).bind()
     }
+
+    override suspend fun setParticipantBio(id: UUID, bio: ParticipantBioDto) =
+        either<ResponseStatusException, Participant> {
+            val p = participantRepo.findByIdFx(id).bind()
+            p.age = bio.age
+            p.gender = bio.gender
+            p.genderDescription = bio.genderDescription
+            participantRepo.saveFx(p).bind()
+        }
 
     override suspend fun setParticipantTlx(
         id: UUID,
