@@ -25,6 +25,22 @@ data class Study(
     }
 
     override fun hashCode() = id.hashCode()
+
+    companion object {
+        fun fromDto(dto: StudyDto) =
+            if (dto.id == null) Study(title=dto.title, reports=mutableSetOf())
+            else Study(dto.id!!, dto.title, mutableSetOf())
+    }
+}
+
+data class StudyDto(
+    var id: UUID?,
+    var title: String
+) {
+
+    companion object {
+        fun fromDao(dao: Study) = StudyDto(dao.id, dao.title)
+    }
 }
 
 interface StudyRepository : CrudRepository<Study, UUID>

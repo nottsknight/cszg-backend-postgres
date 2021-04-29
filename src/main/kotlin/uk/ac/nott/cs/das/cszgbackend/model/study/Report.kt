@@ -23,6 +23,34 @@ data class Report(
     }
 
     override fun hashCode() = id.hashCode()
+
+    companion object {
+        fun fromDto(dto: ReportDto): Report {
+            val pdfData = Base64.getDecoder().decode(dto.pdfData)
+            return if (dto.id == null) Report(
+                title = dto.title,
+                pdfData = pdfData,
+                studies = mutableSetOf(),
+                sentences = dto.sentences
+            )
+            else Report(dto.id!!, dto.title, pdfData, mutableSetOf(), dto.sentences)
+        }
+    }
+}
+
+data class ReportDto(
+    var id: UUID?,
+    var title: String,
+    var pdfData: String,
+    var sentences: MutableSet<Sentence>
+) {
+
+    companion object {
+        fun fromDao(dao: Report): ReportDto {
+            val pdfData = Base64.getEncoder().encodeToString(dao.pdfData)
+            return ReportDto(dao.id, dao.title, pdfData, dao.sentences)
+        }
+    }
 }
 
 interface ReportRepository : CrudRepository<Report, UUID>
