@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.http.HttpStatus
 import uk.ac.nott.cs.das.cszgbackend.model.participant.*
 import java.io.IOException
+import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -78,6 +79,50 @@ class ParticipantServiceTest {
                 assertTrue { ps is Either.Left }
                 ps as Either.Left
                 assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, ps.value.status)
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("When getParticipant")
+    inner class GetParticipant {
+        @Nested
+        @DisplayName("When the repository is functioning")
+        inner class GoodRepo {
+            @Test
+            @DisplayName("Then an existing UUID returns the participant")
+            fun existingUuid() = runBlocking {
+                every { participantRepo.findById(any()) } returns Optional.of(dummyParticipant)
+                val p = service.getParticipant(UUID.randomUUID())
+                assertTrue { p is Either.Right }
+
+                p as Either.Right
+                assertEquals(dummyParticipant, p.value)
+            }
+
+            @Test
+            @DisplayName("Then a non-existent UUID returns a 404 error")
+            fun nonExistentUuid() = runBlocking {
+                every { participantRepo.findById(any()) } returns Optional.empty()
+                val p = service.getParticipant(UUID.randomUUID())
+                assertTrue { p is Either.Left }
+
+                p as Either.Left
+                assertEquals(HttpStatus.NOT_FOUND, p.value.status)
+            }
+        }
+
+        @Nested
+        @DisplayName("When the repository is not functioning")
+        inner class BadRepo {
+            @Test
+            @DisplayName("Then the service returns a 500 error")
+            fun brokenRepo() = runBlocking {
+                every { participantRepo.findById(any()) } throws IOException()
+                val p = service.getParticipant(UUID.randomUUID())
+                assertTrue { p is Either.Left }
+                p as Either.Left
+                assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, p.value.status)
             }
         }
     }
