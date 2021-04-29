@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.http.HttpStatus
 import uk.ac.nott.cs.das.cszgbackend.model.participant.*
-import java.util.*
+import java.io.IOException
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -41,54 +41,44 @@ class ParticipantServiceTest {
     }
 
     @Nested
-    @DisplayName("When ParticipantRepo has data")
-    inner class ParticipantRepo {
-        @Test
-        @DisplayName("Then getAllParticipants should return the participants")
-        fun getAllParticipants() = runBlocking {
-            every { participantRepo.findAll() } returns listOf(dummyParticipant)
-            val participants = service.getAllParticipants()
-            assertTrue { participants is Either.Right }
+    @DisplayName("When getAllParticipants")
+    inner class GetAllParticipants {
+        @Nested
+        @DisplayName("When the repository is functioning")
+        inner class GoodRepo {
+            @Test
+            @DisplayName("Then an empty repo returns an empty iterable")
+            fun emptyIterable() = runBlocking {
+                every { participantRepo.findAll() } returns listOf()
+                val ps = service.getAllParticipants()
+                assertTrue { ps is Either.Right }
+                ps as Either.Right
+                assertEquals(0, ps.value.count())
+            }
 
-            participants as Either.Right
-            assertEquals(1, participants.value.count())
+            @Test
+            @DisplayName("Then a non-empty repo returns a non-empty iterable")
+            fun nonEmptyIterable() = runBlocking {
+                every { participantRepo.findAll() } returns listOf(dummyParticipant)
+                val ps = service.getAllParticipants()
+                assertTrue { ps is Either.Right }
+                ps as Either.Right
+                assertEquals(1, ps.value.count())
+            }
         }
 
-        @Test
-        @DisplayName("Then getParticipant should return the participant")
-        fun getParticipant() = runBlocking {
-            every { participantRepo.findById(dummyParticipant.id) } returns Optional.of(dummyParticipant)
-            val participant = service.getParticipant(dummyParticipant.id)
-            assertTrue { participant is Either.Right }
-
-            participant as Either.Right
-            assertEquals("abcd", participant.value.username)
-        }
-    }
-
-    @Nested
-    @DisplayName("When ParticipantRepo has no data")
-    inner class ParticipantRepoEmpty {
-        @Test
-        @DisplayName("Then getAllParticipants should return an empty iterable")
-        fun getAllParticipants() = runBlocking {
-            every { participantRepo.findAll() } returns listOf()
-            val participants = service.getAllParticipants()
-            assertTrue { participants is Either.Right }
-
-            participants as Either.Right
-            assertEquals(0, participants.value.count())
-        }
-
-        @Test
-        @DisplayName("Then getParticipant should return a 404 error")
-        fun getParticipant() = runBlocking {
-            every { participantRepo.findById(any()) } returns Optional.empty()
-            val participant = service.getParticipant(dummyParticipant.id)
-            assertTrue { participant is Either.Left }
-
-            participant as Either.Left
-            assertEquals(HttpStatus.NOT_FOUND, participant.value.status)
+        @Nested
+        @DisplayName("When the repository is not functioning")
+        inner class BadRepo {
+            @Test
+            @DisplayName("Then the service returns a 500 error")
+            fun brokenRepo() = runBlocking {
+                every { participantRepo.findAll() } throws IOException()
+                val ps = service.getAllParticipants()
+                assertTrue { ps is Either.Left }
+                ps as Either.Left
+                assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, ps.value.status)
+            }
         }
     }
 }
