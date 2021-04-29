@@ -41,3 +41,66 @@ CREATE TABLE fragment (
     CONSTRAINT fragment_pk PRIMARY KEY (id),
     CONSTRAINT fragment_fk_sentence FOREIGN KEY (sentence) REFERENCES sentence (id)
 );
+
+CREATE TABLE participant (
+    id uuid,
+    username char(4),
+    age integer,
+    gender char(1),
+    genderDescription varchar(256),
+    passwordHash char(60),
+    validFrom timestamp,
+    validTo timestamp,
+    CONSTRAINT participant_pk PRIMARY KEY (id),
+    CONSTRAINT participant_uq_username UNIQUE (username)
+);
+
+CREATE TABLE ati (
+    id uuid,
+    participant uuid,
+    response1 integer,
+    response2 integer,
+    response3 integer,
+    response4 integer,
+    response5 integer,
+    response6 integer,
+    response7 integer,
+    response8 integer,
+    response9 integer,
+    CONSTRAINT ati_pk PRIMARY KEY (id),
+    CONSTRAINT ati_fk_participant FOREIGN KEY (participant) REFERENCES participant (id),
+    CONSTRAINT ati_uq_participant UNIQUE (participant)
+);
+
+CREATE TABLE tlx (
+    id uuid,
+    participant uuid,
+    taskNo integer,
+    mentalDemand integer,
+    physicalDemand integer,
+    temporalDemand integer,
+    performance integer,
+    effort integer,
+    frustration integer,
+    CONSTRAINT tlx_pk PRIMARY KEY (id),
+    CONSTRAINT tlx_fk_participant FOREIGN KEY (participant) REFERENCES participant (id),
+    CONSTRAINT tlx_uq_participant_taskNo UNIQUE (participant, taskNo)
+);
+
+CREATE TABLE trust (
+    id uuid,
+    participant uuid,
+    taskNo integer,
+    response1 integer,
+    response2 integer,
+    response3 integer,
+    response4 integer,
+    response5 integer,
+    response6 integer,
+    response7 integer,
+    response8 integer,
+    response9 integer,
+    CONSTRAINT trust_pk PRIMARY KEY (id),
+    CONSTRAINT trust_fk_participant FOREIGN KEY (participant) REFERENCES participant (id),
+    CONSTRAINT trust_uq_participant_taskNo UNIQUE (participant, taskNo)
+);
