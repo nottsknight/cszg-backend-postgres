@@ -185,11 +185,55 @@ class StudyServiceTest {
 
         @Nested
         @DisplayName("When repo has no data")
-        inner class NoData
+        inner class NoData {
+            @Test
+            @DisplayName("Then getAllReports should return an empty iterable")
+            fun getAllReports() = runBlocking {
+                every { reportRepo.findAll() } returns listOf()
+                val reports = service.getAllReports()
+                assertTrue { reports is Either.Right }
+
+                reports as Either.Right
+                assertEquals(0, reports.value.count())
+            }
+
+            @Test
+            @DisplayName("Then getReport should return 404 error")
+            fun getReport() = runBlocking {
+                every { reportRepo.findById(any()) } returns Optional.empty()
+                val report = service.getReport(dummyReport.id)
+                assertTrue { report is Either.Left }
+
+                report as Either.Left
+                assertEquals(HttpStatus.NOT_FOUND, report.value.status)
+            }
+        }
 
         @Nested
         @DisplayName("When repo is broken")
-        inner class RepoBroken
+        inner class RepoBroken {
+            @Test
+            @DisplayName("Then getAllReports should return 500 error")
+            fun getAllReports() = runBlocking {
+                every { reportRepo.findAll() } throws IOException()
+                val reports = service.getAllReports()
+                assertTrue { reports is Either.Left }
+
+                reports as Either.Left
+                assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, reports.value.status)
+            }
+
+            @Test
+            @DisplayName("Then getReport should return 404 error")
+            fun getReport() = runBlocking {
+                every { reportRepo.findById(any()) } throws IOException()
+                val report = service.getReport(dummyReport.id)
+                assertTrue { report is Either.Left }
+
+                report as Either.Left
+                assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, report.value.status)
+            }
+        }
     }
 
     @Nested
