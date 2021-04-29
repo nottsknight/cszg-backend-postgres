@@ -1,12 +1,13 @@
 package uk.ac.nott.cs.das.cszgbackend.service
 
 import arrow.core.Either
+import arrow.core.computations.either
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
-import uk.ac.nott.cs.das.cszgbackend.model.participant.Participant
-import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantAti
-import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantTlx
-import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantTrust
+import uk.ac.nott.cs.das.cszgbackend.model.participant.*
+import uk.ac.nott.cs.das.cszgbackend.modelx.findAllFx
+import uk.ac.nott.cs.das.cszgbackend.modelx.findByIdFx
+import uk.ac.nott.cs.das.cszgbackend.modelx.saveFx
 import java.util.*
 
 interface ParticipantService {
@@ -19,38 +20,49 @@ interface ParticipantService {
 }
 
 @Service
-class ParticipantServiceImpl : ParticipantService {
-    override suspend fun getAllParticipants(): Either<ResponseStatusException, Iterable<Participant>> {
-        TODO("Not yet implemented")
-    }
+class ParticipantServiceImpl(
+    private val participantRepo: ParticipantRepository,
+    private val atiRepo: ParticipantAtiRepository,
+    private val tlxRepo: ParticipantTlxRepository,
+    private val trustRepo: ParticipantTrustRepository
+) : ParticipantService {
 
-    override suspend fun getParticipant(id: UUID): Either<ResponseStatusException, Participant> {
-        TODO("Not yet implemented")
-    }
+    override suspend fun getAllParticipants() = participantRepo.findAllFx()
 
-    override suspend fun createParticipant(p: Participant): Either<ResponseStatusException, Participant> {
-        TODO("Not yet implemented")
-    }
+    override suspend fun getParticipant(id: UUID) = participantRepo.findByIdFx(id)
+
+    override suspend fun createParticipant(p: Participant) = participantRepo.saveFx(p)
 
     override suspend fun setParticipantAti(
         id: UUID,
         ati: ParticipantAti
-    ): Either<ResponseStatusException, Participant> {
-        TODO("Not yet implemented")
+    ) = either<ResponseStatusException, Participant> {
+        val p = participantRepo.findByIdFx(id).bind()
+        ati.participant = p
+        val savedAti = atiRepo.saveFx(ati).bind()
+        p.ati = savedAti
+        participantRepo.saveFx(p).bind()
     }
 
     override suspend fun setParticipantTlx(
         id: UUID,
         tlx: ParticipantTlx
-    ): Either<ResponseStatusException, Participant> {
-        TODO("Not yet implemented")
+    ) = either<ResponseStatusException, Participant> {
+        val p = participantRepo.findByIdFx(id).bind()
+        tlx.participant = p
+        val savedTlx = tlxRepo.saveFx(tlx).bind()
+        p.tlx.add(savedTlx)
+        participantRepo.saveFx(p).bind()
     }
 
     override suspend fun setParticipantTrust(
         id: UUID,
         trust: ParticipantTrust
-    ): Either<ResponseStatusException, Participant> {
-        TODO("Not yet implemented")
+    ) = either<ResponseStatusException, Participant> {
+        val p = participantRepo.findByIdFx(id).bind()
+        trust.participant = p
+        val savedTrust = trustRepo.saveFx(trust).bind()
+        p.trust.add(savedTrust)
+        participantRepo.saveFx(p).bind()
     }
-
 }
