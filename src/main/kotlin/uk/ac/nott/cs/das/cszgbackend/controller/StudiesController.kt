@@ -20,8 +20,8 @@ class StudiesController(private val service: StudyService) {
     @PostMapping
     suspend fun addStudy(@RequestBody study: StudyDto) = service.addStudy(Study.fromDto(study)).returnOrThrow()
 
-    @PostMapping("/{id}/link")
-    suspend fun linkReport(@PathVariable studyId: UUID, @RequestParam(name = "report") reportId: UUID) =
+    @PostMapping("/{studyId}/link/{reportId}")
+    suspend fun linkReport(@PathVariable studyId: UUID, @PathVariable reportId: UUID) =
         service.associateStudyReport(studyId, reportId)
             .map { (s, r) -> StudyDto.fromDao(s) to ReportDto.fromDao(r) }
             .returnOrThrow()
