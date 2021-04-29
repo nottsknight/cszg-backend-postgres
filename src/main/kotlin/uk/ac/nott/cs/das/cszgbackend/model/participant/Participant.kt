@@ -9,15 +9,15 @@ import javax.persistence.*
 data class Participant(
     @Id val id: UUID = UUID.randomUUID(),
     var username: String,
-    var age: Int?,
-    var gender: Char?,
-    var genderDescription: String?,
-    var passwordHash: String?,
-    var validFrom: Calendar?,
-    var validTo: Calendar?,
-    @OneToOne(mappedBy = "participant") var ati: ParticipantAti?,
-    @OneToMany(mappedBy = "participant") var tlx: MutableSet<ParticipantTlx>,
-    @OneToMany(mappedBy = "participant") var trust: MutableSet<ParticipantTrust>
+    var age: Int? = null,
+    var gender: Char? = null,
+    var genderDescription: String? = null,
+    var passwordHash: String? = null,
+    var validFrom: Calendar? = null,
+    var validTo: Calendar? = null,
+    @OneToOne(mappedBy = "participant") var ati: ParticipantAti? = null,
+    @OneToMany(mappedBy = "participant") var tlx: MutableSet<ParticipantTlx> = mutableSetOf(),
+    @OneToMany(mappedBy = "participant") var trust: MutableSet<ParticipantTrust> = mutableSetOf()
 ) {
 
     override fun equals(other: Any?): Boolean {
@@ -27,7 +27,13 @@ data class Participant(
         return id == (other as Participant).id
     }
 
-    override fun hashCode()= id.hashCode()
+    override fun hashCode() = id.hashCode()
 }
+
+data class ParticipantBioDto(
+    var age: Int,
+    var gender: Char,
+    var genderDescription: String?
+)
 
 interface ParticipantRepository : CrudRepository<Participant, UUID>
