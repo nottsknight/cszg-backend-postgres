@@ -10,6 +10,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.springframework.http.HttpStatus
 import uk.ac.nott.cs.das.cszgbackend.model.participant.*
 import java.util.*
 import kotlin.test.assertEquals
@@ -62,6 +63,32 @@ class ParticipantServiceTest {
 
             participant as Either.Right
             assertEquals("abcd", participant.value.username)
+        }
+    }
+
+    @Nested
+    @DisplayName("When ParticipantRepo has no data")
+    inner class ParticipantRepoEmpty {
+        @Test
+        @DisplayName("Then getAllParticipants should return an empty iterable")
+        fun getAllParticipants() = runBlocking {
+            every { participantRepo.findAll() } returns listOf()
+            val participants = service.getAllParticipants()
+            assertTrue { participants is Either.Right }
+
+            participants as Either.Right
+            assertEquals(0, participants.value.count())
+        }
+
+        @Test
+        @DisplayName("Then getParticipant should return a 404 error")
+        fun getParticipant() = runBlocking {
+            every { participantRepo.findById(any()) } returns Optional.empty()
+            val participant = service.getParticipant(dummyParticipant.id)
+            assertTrue { participant is Either.Left }
+
+            participant as Either.Left
+            assertEquals(HttpStatus.NOT_FOUND, participant.value.status)
         }
     }
 }
