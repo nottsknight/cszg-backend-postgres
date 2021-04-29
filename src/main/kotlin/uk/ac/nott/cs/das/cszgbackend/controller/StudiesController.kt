@@ -18,7 +18,8 @@ class StudiesController(private val service: StudyService) {
     suspend fun getStudy(@PathVariable id: UUID) = service.getStudy(id).map { StudyDto.fromDao(it) }.returnOrThrow()
 
     @PostMapping
-    suspend fun addStudy(@RequestBody study: StudyDto) = service.addStudy(Study.fromDto(study)).returnOrThrow()
+    suspend fun addStudy(@RequestBody study: StudyDto) =
+        Study.fromDto(study).let { service.addStudy(it) }.map { StudyDto.fromDao(it) }.returnOrThrow()
 
     @PostMapping("/{studyId}/link/{reportId}")
     suspend fun linkReport(@PathVariable studyId: UUID, @PathVariable reportId: UUID) =
