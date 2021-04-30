@@ -28,9 +28,16 @@ dependencies {
     implementation("io.arrow-kt:arrow-fx-coroutines:0.13.2")
     runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude(module = "junit")
+        exclude(module = "mockito-core")
+    }
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testImplementation("com.ninja-squad:springmockk:3.0.1")
     testImplementation("org.springframework.security:spring-security-test")
-    testImplementation("io.mockk:mockk:1.11.0")
+//    testImplementation("io.mockk:mockk:1.11.0")
+//    testImplementation("com.ninja-squad:springmockk:3.0.2")
 }
 
 tasks.withType<KotlinCompile> {
