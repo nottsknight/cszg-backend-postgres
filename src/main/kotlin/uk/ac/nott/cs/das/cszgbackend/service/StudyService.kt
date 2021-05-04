@@ -8,9 +8,9 @@ import uk.ac.nott.cs.das.cszgbackend.model.study.Report
 import uk.ac.nott.cs.das.cszgbackend.model.study.ReportRepository
 import uk.ac.nott.cs.das.cszgbackend.model.study.Study
 import uk.ac.nott.cs.das.cszgbackend.model.study.StudyRepository
-import uk.ac.nott.cs.das.cszgbackend.modelx.findAllFx
-import uk.ac.nott.cs.das.cszgbackend.modelx.findByIdFx
-import uk.ac.nott.cs.das.cszgbackend.modelx.saveFx
+import uk.ac.nott.cs.das.cszgx.findAllFx
+import uk.ac.nott.cs.das.cszgx.findByIdFx
+import uk.ac.nott.cs.das.cszgx.saveFx
 import java.util.*
 
 interface StudyService {

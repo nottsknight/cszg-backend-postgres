@@ -1,4 +1,4 @@
-package uk.ac.nott.cs.das.cszgbackend.modelx
+package uk.ac.nott.cs.das.cszgx
 
 import arrow.core.Either
 import org.springframework.data.repository.CrudRepository
