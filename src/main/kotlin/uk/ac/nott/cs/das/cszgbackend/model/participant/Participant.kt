@@ -8,7 +8,7 @@ import javax.persistence.*
 @Table(name = "participant")
 data class Participant(
     @Id val id: UUID = UUID.randomUUID(),
-    var username: String,
+    @Column(unique = true) var username: String,
     var age: Int? = null,
     var gender: Char? = null,
     var genderDescription: String? = null,
@@ -36,4 +36,6 @@ data class ParticipantBioDto(
     var genderDescription: String?
 )
 
-interface ParticipantRepository : CrudRepository<Participant, UUID>
+interface ParticipantRepository : CrudRepository<Participant, UUID> {
+    fun findByUsername(username: String): Optional<Participant>
+}
