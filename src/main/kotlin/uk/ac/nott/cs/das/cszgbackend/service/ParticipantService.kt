@@ -5,9 +5,9 @@ import arrow.core.computations.either
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import uk.ac.nott.cs.das.cszgbackend.model.participant.*
-import uk.ac.nott.cs.das.cszgbackend.modelx.findAllFx
-import uk.ac.nott.cs.das.cszgbackend.modelx.findByIdFx
-import uk.ac.nott.cs.das.cszgbackend.modelx.saveFx
+import uk.ac.nott.cs.das.cszgx.findAllFx
+import uk.ac.nott.cs.das.cszgx.findByIdFx
+import uk.ac.nott.cs.das.cszgx.saveFx
 import java.util.*
 
 interface ParticipantService {
