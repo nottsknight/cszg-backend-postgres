@@ -1,10 +1,12 @@
 package uk.ac.nott.cs.das.cszgbackend
 
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
 import org.springframework.security.core.AuthenticationException
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -27,6 +29,9 @@ class CszgSecurityConfig : WebSecurityConfigurerAdapter() {
                 it.authenticationEntryPoint(entryPoint)
             }
     }
+
+    @Bean
+    fun passwordEncoder() = BCryptPasswordEncoder(BCryptPasswordEncoder.BCryptVersion.`$2B`)
 }
 
 class CszgAuthenticationEntryPoint : BasicAuthenticationEntryPoint() {
