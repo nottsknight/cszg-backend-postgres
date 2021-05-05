@@ -12,7 +12,7 @@ class PdfJsonTextStripper : PDFTextStripper() {
         sortByPosition = true
     }
 
-    override fun startDocument(document: PDDocument?) = writeString("""{"pages":[""")
+    override fun startDocument(doc: PDDocument?) = writeString("""{"version":"${doc?.version}" "pages":[""")
     override fun startPage(page: PDPage?) =
         writeString("""{"pageNo":$currentPageNo,"width":${page?.artBox?.width},"height":${page?.artBox?.height},"textObjects":[""")
 
