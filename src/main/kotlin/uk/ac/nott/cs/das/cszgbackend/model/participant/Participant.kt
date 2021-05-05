@@ -21,7 +21,7 @@ data class Participant(
         joinColumns = [JoinColumn(name = "participantId")],
         inverseJoinColumns = [JoinColumn(name = "roleName")]
     )
-    var roles: MutableSet<ParticipantRole>,
+    var roles: MutableSet<ParticipantRole> = mutableSetOf(),
     @OneToOne(mappedBy = "participant") var ati: ParticipantAti? = null,
     @OneToMany(mappedBy = "participant") var tlx: MutableSet<ParticipantTlx> = mutableSetOf(),
     @OneToMany(mappedBy = "participant") var trust: MutableSet<ParticipantTrust> = mutableSetOf()
