@@ -4,13 +4,13 @@ import org.springframework.web.bind.annotation.*
 import uk.ac.nott.cs.das.cszgbackend.model.study.ReportDto
 import uk.ac.nott.cs.das.cszgbackend.model.study.Study
 import uk.ac.nott.cs.das.cszgbackend.model.study.StudyDto
-import uk.ac.nott.cs.das.cszgbackend.service.StudyService
+import uk.ac.nott.cs.das.cszgbackend.service.StudyReportService
 import uk.ac.nott.cs.das.cszgx.returnOrThrow
 import java.util.*
 
 @RestController
 @RequestMapping("/studies")
-class StudiesController(private val service: StudyService) {
+class StudiesController(private val service: StudyReportService) {
     @GetMapping
     suspend fun getAllStudies() = service.getAllStudies().map { it.map { s -> StudyDto.fromDao(s) } }.returnOrThrow()
 

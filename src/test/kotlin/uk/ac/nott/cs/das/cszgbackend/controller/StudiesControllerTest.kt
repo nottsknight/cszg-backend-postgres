@@ -20,7 +20,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.web.server.ResponseStatusException
 import uk.ac.nott.cs.das.cszgbackend.CszgSecurityTestConfig
-import uk.ac.nott.cs.das.cszgbackend.service.StudyService
+import uk.ac.nott.cs.das.cszgbackend.service.StudyReportService
 import kotlin.test.assertNotNull
 
 
@@ -30,7 +30,7 @@ import kotlin.test.assertNotNull
 @DisplayName("Given StudiesController")
 class StudiesControllerTest {
     @MockkBean
-    private lateinit var service: StudyService
+    private lateinit var service: StudyReportService
 
     @Autowired
     private lateinit var controller: StudiesController

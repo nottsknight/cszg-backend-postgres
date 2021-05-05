@@ -22,20 +22,20 @@ import kotlin.test.assertEquals
 
 @ExtendWith(MockKExtension::class)
 @DisplayName("Given StudyService")
-class StudyServiceTest {
+class StudyReportServiceTest {
     @MockK
     private lateinit var studyRepo: StudyRepository
 
     @MockK
     private lateinit var reportRepo: ReportRepository
 
-    private lateinit var service: StudyService
+    private lateinit var service: StudyReportService
     private lateinit var dummyStudy: Study
     private lateinit var dummyReport: Report
 
     @BeforeEach
     fun setUp() {
-        service = StudyServiceImpl(studyRepo, reportRepo)
+        service = StudyReportServiceImpl(studyRepo, reportRepo)
         dummyStudy = Study(title = "test", reports = mutableSetOf())
         dummyReport = Report(
             title = "Test",
