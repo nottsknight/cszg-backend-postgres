@@ -51,10 +51,25 @@ CREATE TABLE participant (
     passwordHash char(60),
     validFrom timestamp,
     validTo timestamp,
-    roles varchar(8) ARRAY,
     CONSTRAINT participant_pk PRIMARY KEY (id),
     CONSTRAINT participant_uq_username UNIQUE (username)
 );
+
+CREATE TABLE role (
+    roleName varchar(8),
+    CONSTRAINT role_pk PRIMARY KEY (roleName)
+);
+
+INSERT INTO role VALUES ("USER");
+INSERT INTO role VALUES ("ADMIN");
+
+CREATE TABLE participant_role (
+    participantId uuid,
+    roleName varchar(8),
+    CONSTRAINT participant_role_pk PRIMARY KEY (participantId, roleName),
+    CONSTRAINT participant_role_fk_participant FOREIGN KEY (participantId) REFERENCES participant (id),
+    CONSTRAINT participant_role_fk_role FOREIGN KEY (roleName) REFERENCES role (roleName),
+)
 
 CREATE TABLE ati (
     id uuid,
