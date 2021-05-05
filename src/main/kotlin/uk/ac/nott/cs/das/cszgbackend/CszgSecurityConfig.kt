@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletResponse
 
 @Configuration
 class CszgSecurityConfig : WebSecurityConfigurerAdapter() {
-    private val entryPoint = CszgAuthenticationEntryPoint()
+    private val entryPoint = CszgAuthenticationEntryPoint("CSzG")
 
     override fun configure(http: HttpSecurity) {
         http
@@ -31,10 +31,14 @@ class CszgSecurityConfig : WebSecurityConfigurerAdapter() {
     }
 
     @Bean
-    fun passwordEncoder() = BCryptPasswordEncoder(BCryptPasswordEncoder.BCryptVersion.`$2B`)
+    fun passwordEncoder() = BCryptPasswordEncoder(BCryptPasswordEncoder.BCryptVersion.`$2Y`, 12)
 }
 
-class CszgAuthenticationEntryPoint : BasicAuthenticationEntryPoint() {
+class CszgAuthenticationEntryPoint(realmName: String) : BasicAuthenticationEntryPoint() {
+    init {
+        setRealmName(realmName)
+    }
+
     override fun commence(
         request: HttpServletRequest?,
         response: HttpServletResponse?,
