@@ -8,6 +8,7 @@ import uk.ac.nott.cs.das.cszgbackend.model.study.Report
 import uk.ac.nott.cs.das.cszgbackend.model.study.ReportRepository
 import uk.ac.nott.cs.das.cszgbackend.model.study.Study
 import uk.ac.nott.cs.das.cszgbackend.model.study.StudyRepository
+import uk.ac.nott.cs.das.cszgbackend.pdf.ReportPdfProcessor
 import uk.ac.nott.cs.das.cszgx.findAllFx
 import uk.ac.nott.cs.das.cszgx.findByIdFx
 import uk.ac.nott.cs.das.cszgx.saveFx
@@ -30,7 +31,8 @@ interface StudyService {
 @Service
 class StudyServiceImpl(
     private val studyRepo: StudyRepository,
-    private val reportRepo: ReportRepository
+    private val reportRepo: ReportRepository,
+    private val pdfProcessor: ReportPdfProcessor
 ) : StudyService {
 
     override suspend fun getAllStudies() = studyRepo.findAllFx()
@@ -45,7 +47,10 @@ class StudyServiceImpl(
 
     override suspend fun getReport(id: UUID) = reportRepo.findByIdFx(id)
 
-    override suspend fun addReport(report: Report) = reportRepo.saveFx(report)
+    override suspend fun addReport(report: Report) = either<ResponseStatusException, Report> {
+        val processedReport = pdfProcessor.processReport(report).bind()
+        reportRepo.saveFx(processedReport).bind()
+    }
 
     override suspend fun associateStudyReport(studyId: UUID, reportId: UUID) =
         either<ResponseStatusException, Pair<Study, Report>> {
