@@ -25,6 +25,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.4.3")
     implementation("io.arrow-kt:arrow-fx-coroutines:0.13.2")
     runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
@@ -36,8 +37,6 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
     testImplementation("com.ninja-squad:springmockk:3.0.1")
     testImplementation("org.springframework.security:spring-security-test")
-//    testImplementation("io.mockk:mockk:1.11.0")
-//    testImplementation("com.ninja-squad:springmockk:3.0.2")
 }
 
 tasks.withType<KotlinCompile> {
