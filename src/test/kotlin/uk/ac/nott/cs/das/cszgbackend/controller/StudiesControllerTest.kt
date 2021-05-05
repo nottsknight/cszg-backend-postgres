@@ -69,7 +69,9 @@ class StudiesControllerTest {
             @Test
             @DisplayName("Then the controller returns a 500 error if the service breaks")
             fun getAllStudiesBad(): Unit = runBlocking {
-                coEvery { service.getAllStudies() } returns Either.Left(ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR))
+                coEvery { service.getAllStudies() } returns
+                        Either.Left(ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR))
+
                 mockMvc.perform(get("/studies")).andExpect {
                     status().isInternalServerError
                 }
