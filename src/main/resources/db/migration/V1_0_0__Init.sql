@@ -51,6 +51,7 @@ CREATE TABLE participant (
     passwordHash char(60),
     validFrom timestamp,
     validTo timestamp,
+    roles varchar(8) ARRAY,
     CONSTRAINT participant_pk PRIMARY KEY (id),
     CONSTRAINT participant_uq_username UNIQUE (username)
 );

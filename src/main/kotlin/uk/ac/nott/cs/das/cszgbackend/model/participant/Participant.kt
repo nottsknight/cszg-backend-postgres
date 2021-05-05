@@ -15,6 +15,7 @@ data class Participant(
     var passwordHash: String? = null,
     var validFrom: Calendar? = null,
     var validTo: Calendar? = null,
+    var roles: Array<String> = arrayOf("USER"),
     @OneToOne(mappedBy = "participant") var ati: ParticipantAti? = null,
     @OneToMany(mappedBy = "participant") var tlx: MutableSet<ParticipantTlx> = mutableSetOf(),
     @OneToMany(mappedBy = "participant") var trust: MutableSet<ParticipantTrust> = mutableSetOf()
