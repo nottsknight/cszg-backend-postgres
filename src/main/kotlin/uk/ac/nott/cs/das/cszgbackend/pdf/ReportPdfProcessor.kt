@@ -15,7 +15,7 @@ import uk.ac.nott.cs.das.cszgbackend.model.study.Report
 @Component
 class ReportPdfProcessor(private val textStripper: PdfJsonTextStripper) {
     suspend fun processReport(report: Report): Either<ResponseStatusException, Report> = either {
-        val docText = loadDocument(report.pdfData).bind().use { extractText(it) }.bind()
+        val docText = loadDocumentText(report.pdfData).bind()
         val docModel = Json.decodeFromString<PdfJsonDocument>(docText)
         for (p in docModel) {
             val lines = groupLines(p.textObjects).flatMap { splitLine(it) }
@@ -23,17 +23,9 @@ class ReportPdfProcessor(private val textStripper: PdfJsonTextStripper) {
         report
     }
 
-    private suspend fun loadDocument(data: ByteArray) = withContext(Dispatchers.IO) {
+    private suspend fun loadDocumentText(data: ByteArray) = withContext(Dispatchers.IO) {
         try {
-            Either.Right(PDDocument.load(data))
-        } catch (e: Exception) {
-            Either.Left(ResponseStatusException(HttpStatus.BAD_REQUEST, e.localizedMessage, e))
-        }
-    }
-
-    private suspend fun extractText(doc: PDDocument) = withContext(Dispatchers.IO) {
-        try {
-            Either.Right(textStripper.getText(doc))
+            PDDocument.load(data).use { textStripper.getText(it) }.let { Either.Right(it) }
         } catch (e: Exception) {
             Either.Left(ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.localizedMessage, e))
         }
