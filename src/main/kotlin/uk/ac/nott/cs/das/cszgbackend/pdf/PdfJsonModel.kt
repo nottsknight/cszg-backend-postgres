@@ -6,7 +6,10 @@ import kotlinx.serialization.Serializable
 data class PdfJsonDocument(
     var version: String,
     var pages: MutableList<PdfJsonPage>
-)
+) : Iterable<PdfJsonPage> {
+
+    override fun iterator() = pages.iterator()
+}
 
 @Serializable
 data class PdfJsonPage(
@@ -14,7 +17,10 @@ data class PdfJsonPage(
     var width: Double,
     var height: Double,
     var textObjects: MutableList<PdfJsonTextObject>
-)
+) : Iterable<PdfJsonTextObject> {
+
+    override fun iterator() = textObjects.iterator()
+}
 
 @Serializable
 data class PdfJsonTextObject(
