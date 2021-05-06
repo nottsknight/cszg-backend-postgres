@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.server.ResponseStatusException
 import uk.ac.nott.cs.das.cszgbackend.model.study.Report
-import uk.ac.nott.cs.das.cszgx.splitOnIndices
+import uk.ac.nott.cs.das.cszgx.pairs
 
 @Component
 class ReportPdfProcessor(private val textStripper: PdfJsonTextStripper) {
@@ -19,15 +19,7 @@ class ReportPdfProcessor(private val textStripper: PdfJsonTextStripper) {
         val docText = loadDocumentText(report.pdfData).bind()
         val docModel = Json.decodeFromString<PdfJsonDocument>(docText)
         for (p in docModel) {
-            val lines = groupLines(p.textObjects)
-                .flatMap { line ->
-                    line.splitOnIndices {
-                        it == 0
-                                || it == line.lastIndex + 1
-                                || line[it].fontName != line[it - 1].fontName
-                                || line[it].fontSize != line[it - 1].fontSize
-                    }
-                }
+            val lines = groupLines(p.textObjects).flatMap { splitLine(it) }
         }
         report
     }
@@ -41,4 +33,11 @@ class ReportPdfProcessor(private val textStripper: PdfJsonTextStripper) {
     }
 
     private fun groupLines(objects: List<PdfJsonTextObject>) = objects.groupBy { it.y1 }.values.toList()
+
+    private fun splitLine(line: List<PdfJsonTextObject>) =
+        (0..line.lastIndex + 1)
+            .filter { it == 0 || it == line.lastIndex + 1 || line[it].fontName != line[it - 1].fontName || line[it].fontSize != line[it - 1].fontSize }
+            .pairs()
+            .map { (i, j) -> line.subList(i, j) }
+            .toList()
 }
