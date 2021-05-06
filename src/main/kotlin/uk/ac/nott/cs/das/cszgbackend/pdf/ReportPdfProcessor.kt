@@ -4,6 +4,8 @@ import arrow.core.Either
 import arrow.core.computations.either
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.text.PDFTextStripper
 import org.springframework.http.HttpStatus
@@ -12,9 +14,10 @@ import org.springframework.web.server.ResponseStatusException
 import uk.ac.nott.cs.das.cszgbackend.model.study.Report
 
 @Component
-class ReportPdfProcessor(private val textStripper: PDFTextStripper) {
+class ReportPdfProcessor(private val textStripper: PdfJsonTextStripper) {
     suspend fun processReport(report: Report): Either<ResponseStatusException, Report> = either {
         val docText = loadDocument(report.pdfData).bind().use { extractText(it) }.bind()
+        val docModel = Json.decodeFromString<PdfJsonDocument>(docText)
         report
     }
 
