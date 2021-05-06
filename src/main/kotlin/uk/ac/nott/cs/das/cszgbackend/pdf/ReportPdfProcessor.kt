@@ -33,19 +33,14 @@ class ReportPdfProcessor(private val textStripper: PdfJsonTextStripper) {
 
     private fun groupLines(objects: List<PdfJsonTextObject>) = objects.groupBy { it.y1 }.values.toList()
 
-    private fun splitLine(line: List<PdfJsonTextObject>): List<List<PdfJsonTextObject>> {
-        val splitPoints = mutableListOf<Int>()
-        for (i in 1..line.lastIndex) {
-            if (line[i].fontName != line[i - 1].fontName || line[i].fontSize != line[i - 1].fontSize) splitPoints.add(i)
-        }
-        splitPoints.add(line.lastIndex + 1)
-
-        var i = 0
-        val splits = mutableListOf<List<PdfJsonTextObject>>()
-        for (j in splitPoints) {
-            splits.add(line.subList(i, j))
-            i = j
-        }
-        return splits
+    private fun <T> List<T>.pairs() = sequence {
+        for (i in 1..lastIndex) yield(this@pairs[i - 1] to this@pairs[i])
     }
+
+    private fun splitLine(line: List<PdfJsonTextObject>) =
+        (0..line.lastIndex + 1)
+            .filter { it == 0 || it == line.lastIndex + 1 || line[it].fontName != line[it - 1].fontName || line[it].fontSize != line[it - 1].fontSize }
+            .pairs()
+            .map { (i, j) -> line.subList(i, j) }
+            .toList()
 }
