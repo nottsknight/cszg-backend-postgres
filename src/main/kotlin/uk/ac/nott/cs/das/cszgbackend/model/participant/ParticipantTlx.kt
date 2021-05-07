@@ -44,7 +44,7 @@ data class ParticipantTlx(
         return id == (other as ParticipantTlx).id
     }
 
-    override fun hashCode()= id.hashCode()
+    override fun hashCode() = id.hashCode()
 }
 
 interface ParticipantTlxRepository : CrudRepository<ParticipantTlx, UUID>

@@ -18,7 +18,15 @@ package uk.ac.nott.cs.das.cszgbackend.model.participant
 
 import org.springframework.data.repository.CrudRepository
 import java.util.*
-import javax.persistence.*
+import javax.persistence.Column
+import javax.persistence.Entity
+import javax.persistence.Id
+import javax.persistence.JoinColumn
+import javax.persistence.JoinTable
+import javax.persistence.ManyToMany
+import javax.persistence.OneToMany
+import javax.persistence.OneToOne
+import javax.persistence.Table
 
 @Entity
 @Table(name = "participant")
