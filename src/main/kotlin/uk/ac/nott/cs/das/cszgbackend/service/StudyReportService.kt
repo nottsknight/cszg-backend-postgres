@@ -13,7 +13,7 @@ import uk.ac.nott.cs.das.cszgx.findByIdFx
 import uk.ac.nott.cs.das.cszgx.saveFx
 import java.util.*
 
-interface StudyService {
+interface StudyReportService {
     suspend fun getAllStudies(): Either<ResponseStatusException, Iterable<Study>>
     suspend fun getStudy(id: UUID): Either<ResponseStatusException, Study>
     suspend fun addStudy(study: Study): Either<ResponseStatusException, Study>
@@ -28,10 +28,10 @@ interface StudyService {
 }
 
 @Service
-class StudyServiceImpl(
+class StudyReportServiceImpl(
     private val studyRepo: StudyRepository,
     private val reportRepo: ReportRepository
-) : StudyService {
+) : StudyReportService {
 
     override suspend fun getAllStudies() = studyRepo.findAllFx()
 
