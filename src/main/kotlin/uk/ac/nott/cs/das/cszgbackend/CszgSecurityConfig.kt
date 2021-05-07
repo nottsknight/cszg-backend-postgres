@@ -36,6 +36,7 @@ class CszgSecurityConfig : WebSecurityConfigurerAdapter() {
         http
             .authorizeRequests {
                 it.antMatchers(HttpMethod.POST, "/studies/**").hasRole("ADMIN")
+                    .antMatchers(HttpMethod.POST, "/reports/**").hasRole("ADMIN")
                     .antMatchers(HttpMethod.GET, "/participants/**").hasRole("ADMIN")
                     .antMatchers("/verify").permitAll()
                     .antMatchers("/**").authenticated()
