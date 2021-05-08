@@ -16,6 +16,7 @@
  */
 package uk.ac.nott.cs.das.cszgbackend.controller
 
+import kotlinx.coroutines.runBlocking
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -34,24 +35,28 @@ import java.util.*
 @RequestMapping("/participants")
 class ParticipantsController(private val service: ParticipantService) {
     @GetMapping
-    suspend fun getAllParticipants() = service.getAllParticipants().returnOrThrow()
+    fun getAllParticipants() = runBlocking { service.getAllParticipants().returnOrThrow() }
 
     @GetMapping("/{id}")
-    suspend fun getParticipant(@PathVariable id: UUID) = service.getParticipant(id).returnOrThrow()
+    fun getParticipant(@PathVariable id: UUID) = runBlocking { service.getParticipant(id).returnOrThrow() }
 
     @PostMapping
-    suspend fun addParticipant(@RequestBody participant: Participant) =
+    fun addParticipant(@RequestBody participant: Participant) = runBlocking {
         service.createParticipant(participant).returnOrThrow()
+    }
 
     @PostMapping("/{id}/bio")
-    suspend fun setBio(@PathVariable id: UUID, @RequestBody bio: ParticipantBioDto) =
+    fun setBio(@PathVariable id: UUID, @RequestBody bio: ParticipantBioDto) = runBlocking {
         service.setParticipantBio(id, bio).returnOrThrow()
+    }
 
     @PostMapping("/{id}/tlx")
-    suspend fun setTlx(@PathVariable id: UUID, @RequestBody tlx: ParticipantTlx) =
+    fun setTlx(@PathVariable id: UUID, @RequestBody tlx: ParticipantTlx) = runBlocking {
         service.setParticipantTlx(id, tlx).returnOrThrow()
+    }
 
     @PostMapping("/{id}/trust")
-    suspend fun setTrust(@PathVariable id: UUID, @RequestBody trust: ParticipantTrust) =
+    fun setTrust(@PathVariable id: UUID, @RequestBody trust: ParticipantTrust) = runBlocking {
         service.setParticipantTrust(id, trust).returnOrThrow()
+    }
 }
