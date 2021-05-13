@@ -19,7 +19,6 @@ package uk.ac.nott.cs.das.cszgbackend.controller
 import arrow.core.Either
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.coEvery
-import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -73,7 +72,7 @@ class StudiesControllerTest {
         inner class Authenticated {
             @Test
             @DisplayName("Then the controller returns the list of studies if the service works")
-            fun getAllStudies(): Unit = runBlocking {
+            fun getAllStudies() {
                 coEvery { service.getAllStudies() } returns Either.Right(listOf())
                 mockMvc.perform(get("/studies")).andExpect {
                     status().isOk
@@ -84,7 +83,7 @@ class StudiesControllerTest {
 
             @Test
             @DisplayName("Then the controller returns a 500 error if the service breaks")
-            fun getAllStudiesBad(): Unit = runBlocking {
+            fun getAllStudiesBad() {
                 coEvery { service.getAllStudies() } returns
                         Either.Left(ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR))
 
@@ -100,7 +99,7 @@ class StudiesControllerTest {
         inner class NotAuthenticated {
             @Test
             @DisplayName("Then the controller returns a 401 error")
-            fun getAllStudies(): Unit = runBlocking {
+            fun getAllStudies() {
                 coEvery { service.getAllStudies() } returns Either.Right(listOf())
                 mockMvc.perform(get("/studies")).andExpect {
                     status().isUnauthorized

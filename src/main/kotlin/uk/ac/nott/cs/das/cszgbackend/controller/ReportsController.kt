@@ -16,6 +16,7 @@
  */
 package uk.ac.nott.cs.das.cszgbackend.controller
 
+import kotlinx.coroutines.runBlocking
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -33,18 +34,24 @@ import java.util.*
 @RequestMapping("/reports")
 class ReportsController(private val service: StudyReportService) {
     @GetMapping
-    suspend fun getAllReports() = service.getAllReports().map { it.map { r -> ReportDto.fromDao(r) } }.returnOrThrow()
+    fun getAllReports() = runBlocking {
+        service.getAllReports().map { it.map { r -> ReportDto.fromDao(r) } }.returnOrThrow()
+    }
 
     @GetMapping("/{id}")
-    suspend fun getReport(@PathVariable id: UUID) = service.getReport(id).map { ReportDto.fromDao(it) }.returnOrThrow()
+    fun getReport(@PathVariable id: UUID) = runBlocking {
+        service.getReport(id).map { ReportDto.fromDao(it) }.returnOrThrow()
+    }
 
     @PostMapping
-    suspend fun addReport(@RequestBody report: ReportDto) =
+    fun addReport(@RequestBody report: ReportDto) = runBlocking {
         Report.fromDto(report).let { service.addReport(it) }.map { ReportDto.fromDao(it) }.returnOrThrow()
+    }
 
     @PostMapping("/{reportId}/link/{studyId}")
-    suspend fun linkReportStudy(@PathVariable reportId: UUID, @PathVariable studyId: UUID) =
+    fun linkReportStudy(@PathVariable reportId: UUID, @PathVariable studyId: UUID) = runBlocking {
         service.associateStudyReport(studyId, reportId)
             .map { (s, r) -> StudyDto.fromDao(s) to ReportDto.fromDao(r) }
             .returnOrThrow()
+    }
 }
