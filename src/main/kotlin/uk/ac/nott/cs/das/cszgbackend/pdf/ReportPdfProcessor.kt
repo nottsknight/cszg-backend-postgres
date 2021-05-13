@@ -2,6 +2,8 @@ package uk.ac.nott.cs.das.cszgbackend.pdf
 
 import arrow.core.Either
 import arrow.core.computations.either
+import edu.stanford.nlp.pipeline.Annotation
+import edu.stanford.nlp.pipeline.AnnotationPipeline
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.decodeFromString
@@ -15,7 +17,11 @@ import uk.ac.nott.cs.das.cszgx.mode
 import uk.ac.nott.cs.das.cszgx.pairs
 
 @Component
-class ReportPdfProcessor(private val textStripper: PdfJsonTextStripper) {
+class ReportPdfProcessor(
+    private val textStripper: PdfJsonTextStripper,
+    private val nlpPipeline: AnnotationPipeline
+) {
+
     suspend fun processReport(report: Report): Either<ResponseStatusException, Report> = either {
         val docText = loadDocumentText(report.pdfData).bind()
         val docModel = Json.decodeFromString<PdfJsonDocument>(docText)
@@ -24,6 +30,9 @@ class ReportPdfProcessor(private val textStripper: PdfJsonTextStripper) {
             val mainFont = lines.map { it[0] }.map { "${it.fontName}/${it.fontSize}" }.mode()
             val mainFontLines = lines.filter { "${it[0].fontName}/${it[0].fontSize}" == mainFont }
             val mainText = mainFontLines.flatMap { it.map { obj -> obj.text } }.reduce { acc, s -> acc + s }
+
+            val mainTextAnnotation = Annotation(mainText)
+            nlpPipeline.annotate(mainTextAnnotation)
         }
         report
     }
