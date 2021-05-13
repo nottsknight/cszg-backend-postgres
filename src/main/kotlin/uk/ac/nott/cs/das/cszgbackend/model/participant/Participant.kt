@@ -61,6 +61,19 @@ data class Participant(
     override fun hashCode() = id.hashCode()
 }
 
+data class ParticipantDto(
+    val id: UUID,
+    var username: String,
+    var ati: ParticipantAti?,
+    var tlx: Set<ParticipantTlx>,
+    var trust: Set<ParticipantTrust>
+) {
+
+    companion object {
+        fun fromDao(dao: Participant) = ParticipantDto(dao.id, dao.username, dao.ati, dao.tlx, dao.trust)
+    }
+}
+
 @Entity
 @Table(name = "role")
 data class ParticipantRole(

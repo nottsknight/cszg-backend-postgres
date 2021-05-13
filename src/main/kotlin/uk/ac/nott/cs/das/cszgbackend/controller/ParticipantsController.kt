@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import uk.ac.nott.cs.das.cszgbackend.model.participant.Participant
 import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantBioDto
+import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantDto
 import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantTlx
 import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantTrust
 import uk.ac.nott.cs.das.cszgbackend.service.ParticipantService
@@ -35,28 +36,34 @@ import java.util.*
 @RequestMapping("/participants")
 class ParticipantsController(private val service: ParticipantService) {
     @GetMapping
-    fun getAllParticipants() = runBlocking { service.getAllParticipants().returnOrThrow() }
+    fun getAllParticipants() =
+        runBlocking {
+            service.getAllParticipants()
+                .map { participants -> participants.map { ParticipantDto.fromDao(it) } }
+                .returnOrThrow()
+        }
 
     @GetMapping("/{id}")
-    fun getParticipant(@PathVariable id: UUID) = runBlocking { service.getParticipant(id).returnOrThrow() }
+    fun getParticipant(@PathVariable id: UUID) =
+        runBlocking { service.getParticipant(id).map { ParticipantDto.fromDao(it) }.returnOrThrow() }
 
     @PostMapping
     fun addParticipant(@RequestBody participant: Participant) = runBlocking {
-        service.createParticipant(participant).returnOrThrow()
+        service.createParticipant(participant).map { ParticipantDto.fromDao(it) }.returnOrThrow()
     }
 
     @PostMapping("/{id}/bio")
     fun setBio(@PathVariable id: UUID, @RequestBody bio: ParticipantBioDto) = runBlocking {
-        service.setParticipantBio(id, bio).returnOrThrow()
+        service.setParticipantBio(id, bio).map { ParticipantDto.fromDao(it) }.returnOrThrow()
     }
 
     @PostMapping("/{id}/tlx")
     fun setTlx(@PathVariable id: UUID, @RequestBody tlx: ParticipantTlx) = runBlocking {
-        service.setParticipantTlx(id, tlx).returnOrThrow()
+        service.setParticipantTlx(id, tlx).map { ParticipantDto.fromDao(it) }.returnOrThrow()
     }
 
     @PostMapping("/{id}/trust")
     fun setTrust(@PathVariable id: UUID, @RequestBody trust: ParticipantTrust) = runBlocking {
-        service.setParticipantTrust(id, trust).returnOrThrow()
+        service.setParticipantTrust(id, trust).map { ParticipantDto.fromDao(it) }.returnOrThrow()
     }
 }
