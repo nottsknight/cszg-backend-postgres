@@ -1,6 +1,7 @@
 package uk.ac.nott.cs.das.cszgbackend.pdf
 
 import kotlinx.serialization.Serializable
+import kotlin.math.abs
 
 @Serializable
 data class PdfJsonDocument(
@@ -32,3 +33,5 @@ data class PdfJsonTextObject(
     var x2: Double,
     var y2: Double
 )
+
+infix fun PdfJsonTextObject.distanceTo(other: PdfJsonTextObject) = abs(other.x1 - this.x2)
