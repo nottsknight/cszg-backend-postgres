@@ -23,33 +23,33 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import uk.ac.nott.cs.das.cszgbackend.model.study.Report
 import uk.ac.nott.cs.das.cszgbackend.model.study.ReportDto
-import uk.ac.nott.cs.das.cszgbackend.model.study.Study
 import uk.ac.nott.cs.das.cszgbackend.model.study.StudyDto
 import uk.ac.nott.cs.das.cszgbackend.service.StudyReportService
 import uk.ac.nott.cs.das.cszgx.returnOrThrow
 import java.util.*
 
 @RestController
-@RequestMapping("/studies")
-class StudiesController(private val service: StudyReportService) {
+@RequestMapping("/reports")
+class ReportsController(private val service: StudyReportService) {
     @GetMapping
-    fun getAllStudies() = runBlocking {
-        service.getAllStudies().map { it.map { s -> StudyDto.fromDao(s) } }.returnOrThrow()
+    fun getAllReports() = runBlocking {
+        service.getAllReports().map { it.map { r -> ReportDto.fromDao(r) } }.returnOrThrow()
     }
 
     @GetMapping("/{id}")
-    fun getStudy(@PathVariable id: UUID) = runBlocking {
-        service.getStudy(id).map { StudyDto.fromDao(it) }.returnOrThrow()
+    fun getReport(@PathVariable id: UUID) = runBlocking {
+        service.getReport(id).map { ReportDto.fromDao(it) }.returnOrThrow()
     }
 
     @PostMapping
-    fun addStudy(@RequestBody study: StudyDto) = runBlocking {
-        Study.fromDto(study).let { service.addStudy(it) }.map { StudyDto.fromDao(it) }.returnOrThrow()
+    fun addReport(@RequestBody report: ReportDto) = runBlocking {
+        Report.fromDto(report).let { service.addReport(it) }.map { ReportDto.fromDao(it) }.returnOrThrow()
     }
 
-    @PostMapping("/{studyId}/link/{reportId}")
-    fun linkReport(@PathVariable studyId: UUID, @PathVariable reportId: UUID) = runBlocking {
+    @PostMapping("/{reportId}/link/{studyId}")
+    fun linkReportStudy(@PathVariable reportId: UUID, @PathVariable studyId: UUID) = runBlocking {
         service.associateStudyReport(studyId, reportId)
             .map { (s, r) -> StudyDto.fromDao(s) to ReportDto.fromDao(r) }
             .returnOrThrow()
