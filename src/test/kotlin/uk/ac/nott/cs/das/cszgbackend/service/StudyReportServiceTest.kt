@@ -28,10 +28,13 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.http.HttpStatus
+import uk.ac.nott.cs.das.cszgbackend.model.study.FragmentRepository
 import uk.ac.nott.cs.das.cszgbackend.model.study.Report
 import uk.ac.nott.cs.das.cszgbackend.model.study.ReportRepository
+import uk.ac.nott.cs.das.cszgbackend.model.study.SentenceRepository
 import uk.ac.nott.cs.das.cszgbackend.model.study.Study
 import uk.ac.nott.cs.das.cszgbackend.model.study.StudyRepository
+import uk.ac.nott.cs.das.cszgbackend.pdf.ReportPdfProcessor
 import java.io.IOException
 import java.util.*
 import kotlin.test.assertEquals
@@ -45,13 +48,22 @@ class StudyReportServiceTest {
     @MockK
     private lateinit var reportRepo: ReportRepository
 
+    @MockK
+    private lateinit var sentenceRepo: SentenceRepository
+
+    @MockK
+    private lateinit var fragmentRepo: FragmentRepository
+
+    @MockK
+    private lateinit var pdfProcessor: ReportPdfProcessor
+
     private lateinit var service: StudyReportService
     private lateinit var dummyStudy: Study
     private lateinit var dummyReport: Report
 
     @BeforeEach
     fun setUp() {
-        service = StudyReportServiceImpl(studyRepo, reportRepo)
+        service = StudyReportServiceImpl(studyRepo, reportRepo, sentenceRepo, fragmentRepo, pdfProcessor)
         dummyStudy = Study(title = "test", reports = mutableSetOf())
         dummyReport = Report(
             title = "Test",

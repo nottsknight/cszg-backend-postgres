@@ -4,6 +4,7 @@ plugins {
     id("org.springframework.boot") version "2.4.5"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
     kotlin("jvm") version "1.5.0"
+    kotlin("plugin.serialization") version "1.5.0"
     kotlin("plugin.spring") version "1.5.0"
     kotlin("plugin.jpa") version "1.5.0"
 }
@@ -17,6 +18,10 @@ repositories {
 }
 
 dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.0")
+    implementation("org.apache.pdfbox:pdfbox:2.0.23")
+    implementation("edu.stanford.nlp:stanford-corenlp:4.2.0")
+    implementation("edu.stanford.nlp:stanford-corenlp:4.2.0:models")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-web")
