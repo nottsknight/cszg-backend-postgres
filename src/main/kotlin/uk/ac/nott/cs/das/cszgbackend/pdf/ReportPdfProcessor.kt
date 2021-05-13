@@ -2,6 +2,7 @@ package uk.ac.nott.cs.das.cszgbackend.pdf
 
 import arrow.core.Either
 import arrow.core.computations.either
+import edu.stanford.nlp.ling.CoreAnnotations
 import edu.stanford.nlp.pipeline.Annotation
 import edu.stanford.nlp.pipeline.AnnotationPipeline
 import kotlinx.coroutines.Dispatchers
@@ -13,6 +14,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.server.ResponseStatusException
 import uk.ac.nott.cs.das.cszgbackend.model.study.Report
+import uk.ac.nott.cs.das.cszgbackend.model.study.Sentence
 import uk.ac.nott.cs.das.cszgx.mode
 import uk.ac.nott.cs.das.cszgx.pairs
 
@@ -29,10 +31,22 @@ class ReportPdfProcessor(
             val lines = groupLines(textObjects).flatMap { splitOnFont(it) }.flatMap { splitOnSpacing(it) }
             val mainFont = lines.map { it[0] }.map { "${it.fontName}/${it.fontSize}" }.mode()
             val mainFontLines = lines.filter { "${it[0].fontName}/${it[0].fontSize}" == mainFont }
-            val mainText = mainFontLines.flatMap { it.map { obj -> obj.text } }.reduce { acc, s -> acc + s }
+            val mainText = mainFontLines.map { it.map { obj -> obj.text } }.map { it.reduce { acc, s -> acc + s } }
 
-            val mainTextAnnotation = Annotation(mainText)
-            nlpPipeline.annotate(mainTextAnnotation)
+            mainText
+                .map { Annotation(it) }
+                .apply { nlpPipeline.annotate(this) }
+                .flatMap { it.get(CoreAnnotations.SentencesAnnotation::class.java) }
+                .map {
+                    Sentence(
+                        content = it.get(CoreAnnotations.OriginalTextAnnotation::class.java),
+                        report = report,
+                        precisionLabels = IntArray(0),
+                        recallLabels = IntArray(0),
+                        fragments = mutableSetOf()
+                    )
+                }
+                .forEach { s -> report.sentences.add(s) }
         }
         report
     }
