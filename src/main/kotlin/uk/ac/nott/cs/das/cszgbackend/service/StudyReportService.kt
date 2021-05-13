@@ -20,8 +20,10 @@ import arrow.core.Either
 import arrow.core.computations.either
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
+import uk.ac.nott.cs.das.cszgbackend.model.study.FragmentRepository
 import uk.ac.nott.cs.das.cszgbackend.model.study.Report
 import uk.ac.nott.cs.das.cszgbackend.model.study.ReportRepository
+import uk.ac.nott.cs.das.cszgbackend.model.study.SentenceRepository
 import uk.ac.nott.cs.das.cszgbackend.model.study.Study
 import uk.ac.nott.cs.das.cszgbackend.model.study.StudyRepository
 import uk.ac.nott.cs.das.cszgbackend.pdf.ReportPdfProcessor
@@ -47,7 +49,9 @@ interface StudyReportService {
 @Service
 class StudyReportServiceImpl(
     private val studyRepo: StudyRepository,
-    private val reportRepo: ReportRepository
+    private val reportRepo: ReportRepository,
+    private val sentenceRepo: SentenceRepository,
+    private val fragmentRepo: FragmentRepository,
     private val pdfProcessor: ReportPdfProcessor
 ) : StudyReportService {
 
@@ -66,6 +70,11 @@ class StudyReportServiceImpl(
     override suspend fun addReport(report: Report) = either<ResponseStatusException, Report> {
         val processedReport = pdfProcessor.processReport(report).bind()
         reportRepo.saveFx(processedReport).bind()
+        processedReport.sentences.forEach { s ->
+            sentenceRepo.saveFx(s).bind()
+            s.fragments.forEach { f -> fragmentRepo.saveFx(f).bind() }
+        }
+        processedReport
     }
 
     override suspend fun associateStudyReport(studyId: UUID, reportId: UUID) =
