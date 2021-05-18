@@ -22,6 +22,7 @@ dependencies {
     implementation("org.apache.pdfbox:pdfbox:2.0.23")
     implementation("edu.stanford.nlp:stanford-corenlp:4.2.0")
     implementation("edu.stanford.nlp:stanford-corenlp:4.2.0:models")
+    implementation("nz.ac.waikato.cms.weka:weka-stable:3.8.5")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-web")
