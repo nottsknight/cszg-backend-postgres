@@ -26,7 +26,7 @@ import javax.persistence.Table
 
 @Entity
 @Table(name = "report")
-data class Report(
+class Report(
     @Id var id: UUID = UUID.randomUUID(),
     var title: String,
     var pdfData: ByteArray,
@@ -35,6 +35,8 @@ data class Report(
     @OneToMany(mappedBy = "report")
     var sentences: MutableSet<Sentence>
 ) {
+
+    override fun toString() = "[Report id=$id, title=$title]"
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

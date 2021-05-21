@@ -27,7 +27,7 @@ import javax.persistence.Table
 
 @Entity
 @Table(name = "study")
-data class Study(
+class Study(
     @Id var id: UUID = UUID.randomUUID(),
     var title: String,
     @ManyToMany
@@ -38,6 +38,8 @@ data class Study(
     )
     var reports: MutableSet<Report>
 ) {
+
+    override fun toString() = "[Study: id=$id, title=$title]"
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
