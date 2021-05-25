@@ -17,6 +17,8 @@
 package uk.ac.nott.cs.das.cszgbackend.service
 
 import arrow.core.Either
+import io.kotest.assertions.arrow.either.shouldBeLeft
+import io.kotest.assertions.arrow.either.shouldBeRight
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -55,16 +57,20 @@ class ParticipantServiceTest : DescribeSpec({
         describe("#getAllParticipants") {
             it("should return an iterable of Participants") {
                 every { participantRepo.findAll() } returns listOf(Participant(username = "abcd"))
+
                 val participants = service.getAllParticipants()
-                participants.shouldBeTypeOf<Either.Right<Iterable<Participant>>>()
-                participants.value.count().shouldBe(1)
+                participants.shouldBeRight {
+                    it.count().shouldBe(1)
+                }
             }
 
             it("should return an exception if the repo fails") {
                 every { participantRepo.findAll() } throws IOException()
+
                 val participants = service.getAllParticipants()
-                participants.shouldBeTypeOf<Either.Left<ResponseStatusException>>()
-                participants.value.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                participants.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
             }
         }
 
@@ -75,22 +81,27 @@ class ParticipantServiceTest : DescribeSpec({
                 every { participantRepo.findById(id) } returns Optional.of(p)
 
                 val result = service.getParticipant(id)
-                result.shouldBeTypeOf<Either.Right<Participant>>()
-                result.value.id.shouldBe(id)
+                result.shouldBeRight {
+                    it.id.shouldBe(id)
+                }
             }
 
             it("should return an exception if the id doesn't exist") {
                 every { participantRepo.findById(any()) } returns Optional.empty()
+
                 val result = service.getParticipant(UUID.randomUUID())
-                result.shouldBeTypeOf<Either.Left<ResponseStatusException>>()
-                result.value.status.shouldBe(HttpStatus.NOT_FOUND)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.NOT_FOUND)
+                }
             }
 
             it("should return an exception if the repo fails") {
                 every { participantRepo.findById(any()) } throws IOException()
+
                 val result = service.getParticipant(UUID.randomUUID())
-                result.shouldBeTypeOf<Either.Left<ResponseStatusException>>()
-                result.value.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
             }
         }
 
@@ -98,17 +109,21 @@ class ParticipantServiceTest : DescribeSpec({
             it("should return the participant if creation succeeds") {
                 val p = Participant(username = "abcd")
                 every { participantRepo.save(p) } returns p
+
                 val result = service.createParticipant(p)
-                result.shouldBeTypeOf<Either.Right<Participant>>()
-                result.value.shouldBe(p)
+                result.shouldBeRight {
+                    it.shouldBe(p)
+                }
             }
 
             it("should return an exception if the repo fails") {
                 every { participantRepo.save(any()) } throws IOException()
                 val p = Participant(username = "abcd")
+
                 val result = service.createParticipant(p)
-                result.shouldBeTypeOf<Either.Left<ResponseStatusException>>()
-                result.value.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
             }
         }
 
@@ -138,35 +153,39 @@ class ParticipantServiceTest : DescribeSpec({
                 every { atiRepo.save(any()) } answers { firstArg() }
 
                 val result = service.setParticipantAti(id, ati)
-                result.shouldBeTypeOf<Either.Right<Participant>>()
-                result.value.let { res ->
-                    res.ati.shouldNotBeNull()
-                    res.ati!!.participant.shouldBe(participant)
+                result.shouldBeRight {
+                    it.ati.shouldNotBeNull().participant.shouldBe(participant)
                 }
             }
 
             it("should return an exception if the participant ID doesn't exist") {
                 every { participantRepo.findById(any()) } returns Optional.empty()
+
                 val result = service.setParticipantAti(id, ati)
-                result.shouldBeTypeOf<Either.Left<ResponseStatusException>>()
-                result.value.status.shouldBe(HttpStatus.NOT_FOUND)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.NOT_FOUND)
+                }
             }
 
             it("should return an exception if saving the ATI fails") {
                 every { participantRepo.findById(id) } returns Optional.of(participant)
                 every { atiRepo.save(any()) } throws IOException()
+
                 val result = service.setParticipantAti(id, ati)
-                result.shouldBeTypeOf<Either.Left<ResponseStatusException>>()
-                result.value.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
             }
 
             it("should return an exception if saving the participant fails") {
                 every { participantRepo.findById(id) } returns Optional.of(participant)
                 every { atiRepo.save(any()) } answers { firstArg() }
                 every { participantRepo.save(any()) } throws IOException()
+
                 val result = service.setParticipantAti(id, ati)
-                result.shouldBeTypeOf<Either.Left<ResponseStatusException>>()
-                result.value.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
             }
         }
 
@@ -185,35 +204,40 @@ class ParticipantServiceTest : DescribeSpec({
                 every { participantRepo.save(any()) } answers { firstArg() }
 
                 val result = service.setParticipantBio(id, bio)
-                result.shouldBeTypeOf<Either.Right<Participant>>()
-                result.value.let { res ->
-                    res.id.shouldBe(id)
-                    res.age.shouldBe(bio.age)
-                    res.gender.shouldBe(bio.gender)
-                    res.genderDescription.shouldBeNull()
+                result.shouldBeRight {
+                    it.id.shouldBe(id)
+                    it.age.shouldBe(bio.age)
+                    it.gender.shouldBe(bio.gender)
+                    it.genderDescription.shouldBeNull()
                 }
             }
 
             it("should return an exception if the ID doesn't exist") {
                 every { participantRepo.findById(id) } returns Optional.empty()
                 val result = service.setParticipantBio(id, bio)
-                result.shouldBeTypeOf<Either.Left<ResponseStatusException>>()
-                result.value.status.shouldBe(HttpStatus.NOT_FOUND)
+
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.NOT_FOUND)
+                }
             }
 
             it("should return an exception if the repo fails when finding the participant") {
                 every { participantRepo.findById(any()) } throws IOException()
+
                 val result = service.setParticipantBio(id, bio)
-                result.shouldBeTypeOf<Either.Left<ResponseStatusException>>()
-                result.value.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
             }
 
             it("should return an exception if the repo fails when saving the participant") {
                 every { participantRepo.findById(id) } returns Optional.of(participant)
                 every { participantRepo.save(any()) } throws IOException()
+
                 val result = service.setParticipantBio(id, bio)
-                result.shouldBeTypeOf<Either.Left<ResponseStatusException>>()
-                result.value.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
             }
         }
     }
