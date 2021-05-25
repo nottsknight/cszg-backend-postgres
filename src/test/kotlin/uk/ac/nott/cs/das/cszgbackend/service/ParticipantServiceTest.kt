@@ -149,6 +149,23 @@ class ParticipantServiceTest : DescribeSpec({
                 result.shouldBeTypeOf<Either.Left<ResponseStatusException>>()
                 result.value.status.shouldBe(HttpStatus.NOT_FOUND)
             }
+
+            it("should return an exception if saving the ATI fails") {
+                every { participantRepo.findById(id) } returns Optional.of(participant)
+                every { atiRepo.save(any()) } throws IOException()
+                val result = service.setParticipantAti(id, ati)
+                result.shouldBeTypeOf<Either.Left<ResponseStatusException>>()
+                result.value.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+            }
+
+            it("should return an exception if saving the participant fails") {
+                every { participantRepo.findById(id) } returns Optional.of(participant)
+                every { atiRepo.save(any()) } answers { firstArg() }
+                every { participantRepo.save(any()) } throws IOException()
+                val result = service.setParticipantAti(id, ati)
+                result.shouldBeTypeOf<Either.Left<ResponseStatusException>>()
+                result.value.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+            }
         }
     }
 })
