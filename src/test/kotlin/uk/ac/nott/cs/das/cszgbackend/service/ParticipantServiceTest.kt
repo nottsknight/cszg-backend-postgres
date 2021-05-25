@@ -18,6 +18,7 @@ package uk.ac.nott.cs.das.cszgbackend.service
 
 import arrow.core.Either
 import io.kotest.core.spec.style.DescribeSpec
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
@@ -28,6 +29,7 @@ import org.springframework.web.server.ResponseStatusException
 import uk.ac.nott.cs.das.cszgbackend.model.participant.Participant
 import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantAti
 import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantAtiRepository
+import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantBioDto
 import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantRepository
 import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantTlxRepository
 import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantTrustRepository
@@ -163,6 +165,53 @@ class ParticipantServiceTest : DescribeSpec({
                 every { atiRepo.save(any()) } answers { firstArg() }
                 every { participantRepo.save(any()) } throws IOException()
                 val result = service.setParticipantAti(id, ati)
+                result.shouldBeTypeOf<Either.Left<ResponseStatusException>>()
+                result.value.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+            }
+        }
+
+        describe("#setParticipantBio") {
+            val id = UUID.randomUUID()
+            lateinit var participant: Participant
+            lateinit var bio: ParticipantBioDto
+
+            beforeEach {
+                participant = Participant(id, "abcd")
+                bio = ParticipantBioDto(1, 'f', null)
+            }
+
+            it("should return the participant with the bio set if the ID exists") {
+                every { participantRepo.findById(id) } returns Optional.of(participant)
+                every { participantRepo.save(any()) } answers { firstArg() }
+
+                val result = service.setParticipantBio(id, bio)
+                result.shouldBeTypeOf<Either.Right<Participant>>()
+                result.value.let { res ->
+                    res.id.shouldBe(id)
+                    res.age.shouldBe(bio.age)
+                    res.gender.shouldBe(bio.gender)
+                    res.genderDescription.shouldBeNull()
+                }
+            }
+
+            it("should return an exception if the ID doesn't exist") {
+                every { participantRepo.findById(id) } returns Optional.empty()
+                val result = service.setParticipantBio(id, bio)
+                result.shouldBeTypeOf<Either.Left<ResponseStatusException>>()
+                result.value.status.shouldBe(HttpStatus.NOT_FOUND)
+            }
+
+            it("should return an exception if the repo fails when finding the participant") {
+                every { participantRepo.findById(any()) } throws IOException()
+                val result = service.setParticipantBio(id, bio)
+                result.shouldBeTypeOf<Either.Left<ResponseStatusException>>()
+                result.value.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+            }
+
+            it("should return an exception if the repo fails when saving the participant") {
+                every { participantRepo.findById(id) } returns Optional.of(participant)
+                every { participantRepo.save(any()) } throws IOException()
+                val result = service.setParticipantBio(id, bio)
                 result.shouldBeTypeOf<Either.Left<ResponseStatusException>>()
                 result.value.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
             }
