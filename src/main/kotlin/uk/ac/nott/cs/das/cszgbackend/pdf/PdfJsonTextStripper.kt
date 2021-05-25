@@ -12,19 +12,19 @@ class PdfJsonTextStripper : PDFTextStripper() {
         sortByPosition = true
     }
 
-    var firstPage = true
-    var firstTextObject = true
+    private var firstPage = true
+    private var firstTextObject = true
 
-    override fun startDocument(doc: PDDocument?) = writeString("""{"version":"${doc?.version}" "pages":[""")
-    override fun startPage(page: PDPage?) {
+    override fun startDocument(doc: PDDocument) = writeString("""{"version":"${doc.version}" "pages":[""")
+    override fun startPage(page: PDPage) {
         if (!firstPage) writeString(",")
         firstPage = false
         firstTextObject = true
-        writeString("""{"pageNo":$currentPageNo,"width":${page?.artBox?.width},"height":${page?.artBox?.height},"textObjects":[""")
+        writeString("""{"pageNo":$currentPageNo,"width":${page.artBox?.width},"height":${page.artBox?.height},"textObjects":[""")
     }
 
-    override fun endPage(page: PDPage?) = writeString("""]}""")
-    override fun endDocument(document: PDDocument?) = writeString("]}")
+    override fun endPage(page: PDPage) = writeString("""]}""")
+    override fun endDocument(document: PDDocument) = writeString("]}")
 
     override fun writeString(text: String, textPositions: MutableList<TextPosition>) {
         val fontName = textPositions[0].font.name
@@ -37,5 +37,11 @@ class PdfJsonTextStripper : PDFTextStripper() {
         if (!firstTextObject) writeString(",")
         firstTextObject = false
         writeString("""{"text":"$text","fontName":"$fontName","fontSize":$fontSize,"x1":$x1,"y1":$y1,"x2":$x2,"y2":$y2}""")
+    }
+
+    override fun getText(doc: PDDocument): String {
+        firstPage = true
+        firstTextObject = true
+        return super.getText(doc)
     }
 }
