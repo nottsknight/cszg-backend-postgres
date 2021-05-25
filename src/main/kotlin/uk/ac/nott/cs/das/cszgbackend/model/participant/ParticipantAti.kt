@@ -25,9 +25,9 @@ import javax.persistence.Table
 
 @Entity
 @Table(name = "ati")
-data class ParticipantAti(
+class ParticipantAti(
     @Id var id: UUID = UUID.randomUUID(),
-    @OneToOne var participant: Participant,
+    @OneToOne var participant: Participant? = null,
     var response1: Int,
     var response2: Int,
     var response3: Int,
@@ -38,6 +38,9 @@ data class ParticipantAti(
     var response8: Int,
     var response9: Int
 ) {
+
+    override fun toString() =
+        "[ParticipantAti id=$id, r1=$response1, r2=$response2, r3=$response3, r4=$response4, r5=$response5, r6=$response6, r7=$response7, r8=$response8, r9=$response9"
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
