@@ -33,6 +33,7 @@ import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantBioDto
 import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantRepository
 import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantTlx
 import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantTlxRepository
+import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantTrust
 import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantTrustRepository
 import java.io.IOException
 import java.util.*
@@ -303,6 +304,78 @@ class ParticipantServiceTest : DescribeSpec({
                 every { participantRepo.save(any()) } throws IOException()
 
                 val result = service.setParticipantTlx(id, tlx)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
+            }
+        }
+
+        describe("#setParticipantTrust") {
+            val id = UUID.randomUUID()
+            lateinit var participant: Participant
+            lateinit var trust: ParticipantTrust
+
+            beforeEach {
+                participant = Participant(id, "abcd")
+                trust = ParticipantTrust(
+                    taskNo = 1,
+                    response1 = 1,
+                    response2 = 1,
+                    response3 = 1,
+                    response4 = 1,
+                    response5 = 1,
+                    response6 = 1,
+                    response7 = 1,
+                    response8 = 1,
+                    response9 = 1
+                )
+            }
+
+            it("should return the participant with trust set if the ID exists") {
+                every { participantRepo.findById(id) } returns Optional.of(participant)
+                every { trustRepo.save(any()) } answers { firstArg() }
+                every { participantRepo.save(any()) } answers { firstArg() }
+
+                val result = service.setParticipantTrust(id, trust)
+                result.shouldBeRight {
+                    it.trust.shouldContain(trust)
+                }
+            }
+
+            it("should return an exception if the ID doesn't exist") {
+                every { participantRepo.findById(any()) } returns Optional.empty()
+
+                val result = service.setParticipantTrust(id, trust)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.NOT_FOUND)
+                }
+            }
+
+            it("should return an exception if getting the participant fails") {
+                every { participantRepo.findById(any()) } throws IOException()
+
+                val result = service.setParticipantTrust(id, trust)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
+            }
+
+            it("should return an exception if saving the TLX fails") {
+                every { participantRepo.findById(id) } returns Optional.of(participant)
+                every { trustRepo.save(any()) } throws IOException()
+
+                val result = service.setParticipantTrust(id, trust)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
+            }
+
+            it("should return an exception if saving the participant fails") {
+                every { participantRepo.findById(id) } returns Optional.of(participant)
+                every { trustRepo.save(any()) } answers { firstArg() }
+                every { participantRepo.save(any()) } throws IOException()
+
+                val result = service.setParticipantTrust(id, trust)
                 result.shouldBeLeft {
                     it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
                 }
