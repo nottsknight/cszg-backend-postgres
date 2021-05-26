@@ -25,9 +25,9 @@ import javax.persistence.Table
 
 @Entity
 @Table(name = "tlx")
-data class ParticipantTlx(
+class ParticipantTlx(
     @Id var id: UUID = UUID.randomUUID(),
-    @ManyToOne var participant: Participant,
+    @ManyToOne var participant: Participant? = null,
     var taskNo: Int,
     var mentalDemand: Int,
     var physicalDemand: Int,
@@ -36,6 +36,9 @@ data class ParticipantTlx(
     var performance: Int,
     var frustration: Int
 ) {
+
+    override fun toString() =
+        "[ParticipantTlx MD=$mentalDemand, PD=$physicalDemand, TD=$temporalDemand, EF=$effort, PF=$performance, FR=$frustration]"
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

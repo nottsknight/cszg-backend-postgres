@@ -16,23 +16,22 @@
  */
 package uk.ac.nott.cs.das.cszgbackend.service
 
-import arrow.core.Either
 import io.kotest.assertions.arrow.either.shouldBeLeft
 import io.kotest.assertions.arrow.either.shouldBeRight
 import io.kotest.core.spec.style.DescribeSpec
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeTypeOf
 import io.mockk.every
 import io.mockk.mockk
 import org.springframework.http.HttpStatus
-import org.springframework.web.server.ResponseStatusException
 import uk.ac.nott.cs.das.cszgbackend.model.participant.Participant
 import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantAti
 import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantAtiRepository
 import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantBioDto
 import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantRepository
+import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantTlx
 import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantTlxRepository
 import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantTrustRepository
 import java.io.IOException
@@ -235,6 +234,75 @@ class ParticipantServiceTest : DescribeSpec({
                 every { participantRepo.save(any()) } throws IOException()
 
                 val result = service.setParticipantBio(id, bio)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
+            }
+        }
+
+        describe("#setParticipantTlx") {
+            val id = UUID.randomUUID()
+            lateinit var participant: Participant
+            lateinit var tlx: ParticipantTlx
+
+            beforeEach {
+                participant = Participant(id, "abcd")
+                tlx = ParticipantTlx(
+                    taskNo = 1,
+                    mentalDemand = 1,
+                    physicalDemand = 1,
+                    temporalDemand = 1,
+                    effort = 1,
+                    performance = 1,
+                    frustration = 1
+                )
+            }
+
+            it("should return the participant with TLX set if the ID exists") {
+                every { participantRepo.findById(id) } returns Optional.of(participant)
+                every { tlxRepo.save(any()) } answers { firstArg() }
+                every { participantRepo.save(any()) } answers { firstArg() }
+
+                val result = service.setParticipantTlx(id, tlx)
+                result.shouldBeRight {
+                    it.tlx.shouldContain(tlx)
+                }
+            }
+
+            it("should return an exception if the ID doesn't exist") {
+                every { participantRepo.findById(any()) } returns Optional.empty()
+
+                val result = service.setParticipantTlx(id, tlx)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.NOT_FOUND)
+                }
+            }
+
+            it("should return an exception if getting the participant fails") {
+                every { participantRepo.findById(any()) } throws IOException()
+
+                val result = service.setParticipantTlx(id, tlx)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
+            }
+
+            it("should return an exception if saving the TLX fails") {
+                every { participantRepo.findById(id) } returns Optional.of(participant)
+                every { tlxRepo.save(any()) } throws IOException()
+
+                val result = service.setParticipantTlx(id, tlx)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
+            }
+
+            it("should return an exception if saving the participant fails") {
+                every { participantRepo.findById(id) } returns Optional.of(participant)
+                every { tlxRepo.save(any()) } answers { firstArg() }
+                every { participantRepo.save(any()) } throws IOException()
+
+                val result = service.setParticipantTlx(id, tlx)
                 result.shouldBeLeft {
                     it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
                 }
