@@ -41,7 +41,7 @@ class ParticipantTrust(
 ) {
 
     override fun toString() =
-        "[ParticipantTrust task=$taskNo, r1=$response1, r2=$response2, r3=$response3, r4=$response4, r5=$response5, r6=$response6, r7=$response7, r8=$response8, r9=$response9]"
+        "ParticipantTrust [task=$taskNo, r1=$response1, r2=$response2, r3=$response3, r4=$response4, r5=$response5, r6=$response6, r7=$response7, r8=$response8, r9=$response9]"
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

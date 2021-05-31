@@ -38,7 +38,7 @@ class ParticipantTlx(
 ) {
 
     override fun toString() =
-        "[ParticipantTlx MD=$mentalDemand, PD=$physicalDemand, TD=$temporalDemand, EF=$effort, PF=$performance, FR=$frustration]"
+        "ParticipantTlx [MD=$mentalDemand, PD=$physicalDemand, TD=$temporalDemand, EF=$effort, PF=$performance, FR=$frustration]"
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
