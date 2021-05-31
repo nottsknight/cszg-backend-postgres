@@ -19,6 +19,7 @@ package uk.ac.nott.cs.das.cszgbackend.controller
 import arrow.core.Either
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.coEvery
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -32,12 +33,13 @@ import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.web.server.ResponseStatusException
 import uk.ac.nott.cs.das.cszgbackend.CszgSecurityTestConfig
+import uk.ac.nott.cs.das.cszgbackend.model.study.Study
 import uk.ac.nott.cs.das.cszgbackend.service.StudyReportService
-
 
 @ExtendWith(SpringExtension::class)
 @WebMvcTest(controllers = [StudiesController::class])
@@ -53,6 +55,13 @@ class StudiesControllerTest {
     @Autowired
     private lateinit var mockMvc: MockMvc
 
+    private lateinit var mockStudy: Study
+
+    @BeforeEach
+    fun setUp() {
+        mockStudy = Study(title = "Test", reports = mutableSetOf())
+    }
+
     @Nested
     @DisplayName("GET /studies")
     inner class GetStudies {
@@ -63,6 +72,7 @@ class StudiesControllerTest {
             mockMvc.perform(get("/studies")).andExpect {
                 status().isOk
                 content().contentType(MediaType.APPLICATION_JSON)
+                content().json("[]")
             }
         }
 
@@ -85,11 +95,87 @@ class StudiesControllerTest {
 
     @Nested
     @DisplayName("GET /studies/{id}")
-    inner class GetStudiesId
+    inner class GetStudiesId {
+        @Test
+        @WithMockUser("test")
+        fun `should return a 200 response with the study if the ID exists`() {
+            coEvery { service.getStudy(mockStudy.id) } returns Either.Right(mockStudy)
+            mockMvc.perform(get("/studies/${mockStudy.id}")).andExpect {
+                status().isOk
+                content().contentType(MediaType.APPLICATION_JSON)
+                content().json("""{"id":"${mockStudy.id}","title":"Test","reports":[]}""")
+            }
+        }
+
+        @Test
+        @WithMockUser("test")
+        fun `should return a 404 response if the ID doesn't exist`() {
+            coEvery { service.getStudy(any()) } returns Either.Left(ResponseStatusException(HttpStatus.NOT_FOUND))
+            mockMvc.perform(get("/studies/${mockStudy.id}")).andExpect {
+                status().isNotFound
+            }
+        }
+
+        @Test
+        @WithMockUser("test")
+        fun `should return a 500 response if the service fails to get the study`() {
+            coEvery { service.getStudy(any()) } returns Either.Left(ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR))
+            mockMvc.perform(get("/studies/${mockStudy.id}")).andExpect {
+                status().isInternalServerError
+            }
+        }
+
+        @Test
+        @WithMockUser("foo")
+        fun `should return a 401 response if the user is unauthenticated`() {
+            coEvery { service.getStudy(mockStudy.id) } returns Either.Right(mockStudy)
+            mockMvc.perform(get("/studies/${mockStudy.id}")).andExpect {
+                status().isUnauthorized
+            }
+        }
+    }
 
     @Nested
     @DisplayName("POST /studies")
-    inner class PostStudies
+    inner class PostStudies {
+        @Test
+        @WithMockUser("admin")
+        fun `should return a 201 response with the new study if creation succeeded`() {
+            coEvery { service.addStudy(any()) } answers { Either.Right(firstArg()) }
+            mockMvc.perform(post("/studies", mockStudy)).andExpect {
+                status().isCreated
+                content().contentType(MediaType.APPLICATION_JSON)
+                content().json("""{"id":"${mockStudy.id}","title":"Test","reports":[]}""")
+            }
+        }
+
+        @Test
+        @WithMockUser("admin")
+        fun `should return a 500 response if the service fails to save the study`() {
+            coEvery { service.addStudy(any()) } returns Either.Left(ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR))
+            mockMvc.perform(post("/studies", mockStudy)).andExpect {
+                status().isInternalServerError
+            }
+        }
+
+        @Test
+        @WithMockUser("foo")
+        fun `should return a 401 response if the user is unauthenticated`() {
+            coEvery { service.addStudy(any()) } answers { Either.Right(firstArg()) }
+            mockMvc.perform(post("/studies", mockStudy)).andExpect {
+                status().isUnauthorized
+            }
+        }
+
+        @Test
+        @WithMockUser("test")
+        fun `should return a 403 response if the user is unauthorized`() {
+            coEvery { service.addStudy(any()) } answers { Either.Right(firstArg()) }
+            mockMvc.perform(post("/studies", mockStudy)).andExpect {
+                status().isForbidden
+            }
+        }
+    }
 
     @Nested
     @DisplayName("POST /studies/{studyId}/link/{reportId}")
