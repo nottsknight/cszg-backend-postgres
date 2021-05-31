@@ -38,7 +38,9 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.web.server.ResponseStatusException
 import uk.ac.nott.cs.das.cszgbackend.CszgSecurityTestConfig
+import uk.ac.nott.cs.das.cszgbackend.model.study.Report
 import uk.ac.nott.cs.das.cszgbackend.model.study.Study
+import uk.ac.nott.cs.das.cszgbackend.model.study.StudyDto
 import uk.ac.nott.cs.das.cszgbackend.service.StudyReportService
 
 @ExtendWith(SpringExtension::class)
@@ -77,19 +79,19 @@ class StudiesControllerTest {
         }
 
         @Test
+        @WithMockUser("foo")
+        fun `should return a 401 response if the user is unauthenticated`() {
+            coEvery { service.getAllStudies() } returns Either.Right(listOf())
+            mockMvc.perform(get("/studies")).andExpect { status().isUnauthorized }
+        }
+
+        @Test
         @WithMockUser("test")
         fun `should return a 500 response if the server fails to produce the studies`() {
             coEvery { service.getAllStudies() } returns Either.Left(ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR))
             mockMvc.perform(get("/studies")).andExpect {
                 status().isInternalServerError
             }
-        }
-
-        @Test
-        @WithMockUser("foo")
-        fun `should return a 401 response if the user is unauthenticated`() {
-            coEvery { service.getAllStudies() } returns Either.Right(listOf())
-            mockMvc.perform(get("/studies")).andExpect { status().isUnauthorized }
         }
     }
 
@@ -104,6 +106,15 @@ class StudiesControllerTest {
                 status().isOk
                 content().contentType(MediaType.APPLICATION_JSON)
                 content().json("""{"id":"${mockStudy.id}","title":"Test","reports":[]}""")
+            }
+        }
+
+        @Test
+        @WithMockUser("foo")
+        fun `should return a 401 response if the user is unauthenticated`() {
+            coEvery { service.getStudy(mockStudy.id) } returns Either.Right(mockStudy)
+            mockMvc.perform(get("/studies/${mockStudy.id}")).andExpect {
+                status().isUnauthorized
             }
         }
 
@@ -124,15 +135,6 @@ class StudiesControllerTest {
                 status().isInternalServerError
             }
         }
-
-        @Test
-        @WithMockUser("foo")
-        fun `should return a 401 response if the user is unauthenticated`() {
-            coEvery { service.getStudy(mockStudy.id) } returns Either.Right(mockStudy)
-            mockMvc.perform(get("/studies/${mockStudy.id}")).andExpect {
-                status().isUnauthorized
-            }
-        }
     }
 
     @Nested
@@ -142,19 +144,10 @@ class StudiesControllerTest {
         @WithMockUser("admin")
         fun `should return a 201 response with the new study if creation succeeded`() {
             coEvery { service.addStudy(any()) } answers { Either.Right(firstArg()) }
-            mockMvc.perform(post("/studies", mockStudy)).andExpect {
+            mockMvc.perform(post("/studies", StudyDto.fromDao(mockStudy))).andExpect {
                 status().isCreated
                 content().contentType(MediaType.APPLICATION_JSON)
                 content().json("""{"id":"${mockStudy.id}","title":"Test","reports":[]}""")
-            }
-        }
-
-        @Test
-        @WithMockUser("admin")
-        fun `should return a 500 response if the service fails to save the study`() {
-            coEvery { service.addStudy(any()) } returns Either.Left(ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR))
-            mockMvc.perform(post("/studies", mockStudy)).andExpect {
-                status().isInternalServerError
             }
         }
 
@@ -175,9 +168,83 @@ class StudiesControllerTest {
                 status().isForbidden
             }
         }
+
+        @Test
+        @WithMockUser("admin")
+        fun `should return a 500 response if the service fails to save the study`() {
+            coEvery { service.addStudy(any()) } returns Either.Left(ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR))
+            mockMvc.perform(post("/studies", mockStudy)).andExpect {
+                status().isInternalServerError
+            }
+        }
     }
 
     @Nested
     @DisplayName("POST /studies/{studyId}/link/{reportId}")
-    inner class PostStudiesLinkReports
+    inner class PostStudiesLinkReports {
+        private lateinit var mockReport: Report
+
+        @BeforeEach
+        fun setUp() {
+            mockReport =
+                Report(title = "Test", pdfData = byteArrayOf(), sentences = mutableSetOf(), studies = mutableSetOf())
+        }
+
+        @Test
+        @WithMockUser("admin")
+        fun `should return a 200 response with the two updated entities if both IDs exist`() {
+            coEvery { service.associateStudyReport(mockStudy.id, mockReport.id) } answers {
+                val s = firstArg<Study>()
+                val r = secondArg<Report>()
+                s.reports.add(r)
+                r.studies.add(s)
+                Either.Right(s to r)
+            }
+            mockMvc.perform(post("/${mockStudy.id}/link/${mockReport.id}")).andExpect {
+                status().isOk
+                content().contentType(MediaType.APPLICATION_JSON)
+            }
+        }
+
+        @Test
+        @WithMockUser("foo")
+        fun `should return a 401 response if the user is unauthenticated`() {
+            coEvery { service.associateStudyReport(mockStudy.id, mockReport.id) } answers {
+                val s = firstArg<Study>()
+                val r = secondArg<Report>()
+                s.reports.add(r)
+                r.studies.add(s)
+                Either.Right(s to r)
+            }
+            mockMvc.perform(post("/${mockStudy.id}/link/${mockReport.id}")).andExpect {
+                status().isUnauthorized
+            }
+        }
+
+        @Test
+        @WithMockUser("test")
+        fun `should return a 403 response if the user is unauthorized`() {
+            coEvery { service.associateStudyReport(mockStudy.id, mockReport.id) } answers {
+                val s = firstArg<Study>()
+                val r = secondArg<Report>()
+                s.reports.add(r)
+                r.studies.add(s)
+                Either.Right(s to r)
+            }
+            mockMvc.perform(post("/${mockStudy.id}/link/${mockReport.id}")).andExpect {
+                status().isForbidden
+            }
+        }
+
+        @Test
+        @WithMockUser("admin")
+        fun `should return a 404 response if either ID doesn't exist`() {
+            coEvery { service.associateStudyReport(mockStudy.id, mockReport.id) } returns Either.Left(
+                ResponseStatusException(HttpStatus.NOT_FOUND)
+            )
+            mockMvc.perform(post("/${mockStudy.id}/link/${mockReport.id}")).andExpect {
+                status().isNotFound
+            }
+        }
+    }
 }
