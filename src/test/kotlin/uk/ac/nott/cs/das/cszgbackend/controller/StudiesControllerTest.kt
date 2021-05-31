@@ -26,6 +26,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit.jupiter.SpringExtension
@@ -36,13 +37,12 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.web.server.ResponseStatusException
 import uk.ac.nott.cs.das.cszgbackend.CszgSecurityTestConfig
 import uk.ac.nott.cs.das.cszgbackend.service.StudyReportService
-import kotlin.test.assertNotNull
 
 
 @ExtendWith(SpringExtension::class)
 @WebMvcTest(controllers = [StudiesController::class])
 @ContextConfiguration(classes = [CszgSecurityTestConfig::class])
-@DisplayName("Given StudiesController")
+@DisplayName("StudiesController")
 class StudiesControllerTest {
     @MockkBean
     private lateinit var service: StudyReportService
@@ -54,57 +54,44 @@ class StudiesControllerTest {
     private lateinit var mockMvc: MockMvc
 
     @Nested
-    @DisplayName("When the context is instantiated")
-    inner class ContextLoad {
+    @DisplayName("GET /studies")
+    inner class GetStudies {
         @Test
-        @DisplayName("Then the context should be created")
-        fun testContextLoads() {
-            assertNotNull(controller)
+        @WithMockUser("test")
+        fun `should return a 200 response with the studies if all goes well`() {
+            coEvery { service.getAllStudies() } returns Either.Right(listOf())
+            mockMvc.perform(get("/studies")).andExpect {
+                status().isOk
+                content().contentType(MediaType.APPLICATION_JSON)
+            }
+        }
+
+        @Test
+        @WithMockUser("test")
+        fun `should return a 500 response if the server fails to produce the studies`() {
+            coEvery { service.getAllStudies() } returns Either.Left(ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR))
+            mockMvc.perform(get("/studies")).andExpect {
+                status().isInternalServerError
+            }
+        }
+
+        @Test
+        @WithMockUser("foo")
+        fun `should return a 401 response if the user is unauthenticated`() {
+            coEvery { service.getAllStudies() } returns Either.Right(listOf())
+            mockMvc.perform(get("/studies")).andExpect { status().isUnauthorized }
         }
     }
 
     @Nested
-    @DisplayName("When GET /studies")
-    @WithMockUser("test")
-    inner class GetStudies {
-        @Nested
-        @DisplayName("When authenticated")
-        inner class Authenticated {
-            @Test
-            @DisplayName("Then the controller returns the list of studies if the service works")
-            fun getAllStudies() {
-                coEvery { service.getAllStudies() } returns Either.Right(listOf())
-                mockMvc.perform(get("/studies")).andExpect {
-                    status().isOk
-                    content().contentType("application/json")
-                    content().json("[]")
-                }
-            }
+    @DisplayName("GET /studies/{id}")
+    inner class GetStudiesId
 
-            @Test
-            @DisplayName("Then the controller returns a 500 error if the service breaks")
-            fun getAllStudiesBad() {
-                coEvery { service.getAllStudies() } returns
-                        Either.Left(ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR))
+    @Nested
+    @DisplayName("POST /studies")
+    inner class PostStudies
 
-                mockMvc.perform(get("/studies")).andExpect {
-                    status().isInternalServerError
-                }
-            }
-        }
-
-        @Nested
-        @DisplayName("When not authenticated")
-        @WithMockUser("foo")
-        inner class NotAuthenticated {
-            @Test
-            @DisplayName("Then the controller returns a 401 error")
-            fun getAllStudies() {
-                coEvery { service.getAllStudies() } returns Either.Right(listOf())
-                mockMvc.perform(get("/studies")).andExpect {
-                    status().isUnauthorized
-                }
-            }
-        }
-    }
+    @Nested
+    @DisplayName("POST /studies/{studyId}/link/{reportId}")
+    inner class PostStudiesLinkReports
 }
