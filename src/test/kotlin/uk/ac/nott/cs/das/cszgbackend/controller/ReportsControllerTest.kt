@@ -33,11 +33,13 @@ import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.web.server.ResponseStatusException
 import uk.ac.nott.cs.das.cszgbackend.CszgSecurityTestConfig
 import uk.ac.nott.cs.das.cszgbackend.model.study.Report
+import uk.ac.nott.cs.das.cszgbackend.model.study.Study
 import uk.ac.nott.cs.das.cszgbackend.service.StudyReportService
 
 @ExtendWith(SpringExtension::class)
@@ -139,9 +141,102 @@ class ReportsControllerTest {
 
     @Nested
     @DisplayName("POST /reports")
-    inner class PostReports
+    inner class PostReports {
+        @Test
+        @WithMockUser("admin")
+        fun `should return a 201 response with the report if saving succeeds`() {
+            coEvery { service.addReport(mockReport) } returns Either.Right(mockReport)
+            mockMvc.perform(post("/reports", mockReport)).andExpect {
+                status().isCreated
+                content().contentType(MediaType.APPLICATION_JSON)
+                content().json("""{"id":"${mockReport.id}","title":"Test","pdfData":"","sentences":[]}""")
+            }
+        }
+
+        @Test
+        @WithMockUser("foo")
+        fun `should return a 401 response if the user isn't authenticated`() {
+            coEvery { service.addReport(mockReport) } returns Either.Right(mockReport)
+            mockMvc.perform(post("/reports", mockReport)).andExpect {
+                status().isUnauthorized
+            }
+        }
+
+        @Test
+        @WithMockUser("test")
+        fun `should return a 403 response if the user isn't authorized`() {
+            coEvery { service.addReport(mockReport) } returns Either.Right(mockReport)
+            mockMvc.perform(post("/reports", mockReport)).andExpect {
+                status().isForbidden
+            }
+        }
+
+        @Test
+        @WithMockUser("admin")
+        fun `should return a 500 response if the service fails`() {
+            coEvery { service.addReport(mockReport) } returns Either.Left(ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR))
+            mockMvc.perform(post("/reports", mockReport)).andExpect {
+                status().isInternalServerError
+            }
+        }
+    }
 
     @Nested
     @DisplayName("POST /reports/{reportId}/link/{studyId}")
-    inner class PostReportsLinkStudy
+    inner class PostReportsLinkStudy {
+        private lateinit var mockStudy: Study
+        private lateinit var uri: String
+
+        @BeforeEach
+        fun setUp() {
+            mockStudy = Study(title = "Test", reports = mutableSetOf())
+            uri = "/reports/${mockReport.id}/link/${mockStudy.id}"
+        }
+
+        @Test
+        @WithMockUser("admin")
+        fun `should return a 200 response with the linked study and report if everything works`() {
+            coEvery {
+                service.associateStudyReport(
+                    mockStudy.id,
+                    mockReport.id
+                )
+            } returns Either.Right(mockStudy to mockReport)
+            mockMvc.perform(post(uri)).andExpect {
+                status().isOk
+                content().contentType(MediaType.APPLICATION_JSON)
+            }
+        }
+
+        @Test
+        @WithMockUser("foo")
+        fun `should return a 401 response if the user isn't authenticated`() {
+            coEvery { service.associateStudyReport(any(), any()) } returns Either.Right(mockStudy to mockReport)
+            mockMvc.perform(post("/reports", mockReport)).andExpect {
+                status().isUnauthorized
+            }
+        }
+
+        @Test
+        @WithMockUser("test")
+        fun `should return a 403 response if the user isn't authorized`() {
+            coEvery { service.associateStudyReport(any(), any()) } returns Either.Right(mockStudy to mockReport)
+            mockMvc.perform(post(uri)).andExpect {
+                status().isForbidden
+            }
+        }
+
+        @Test
+        @WithMockUser("admin")
+        fun `should return a 500 response if the service fails`() {
+            coEvery { service.associateStudyReport(any(), any()) } returns Either.Left(
+                ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR
+                )
+            )
+            mockMvc.perform(post(uri)).andExpect {
+                status().isInternalServerError
+            }
+        }
+    }
 }
