@@ -16,16 +16,28 @@
  */
 package uk.ac.nott.cs.das.cszgbackend.controller
 
+import arrow.core.Either
 import com.ninjasquad.springmockk.MockkBean
+import io.mockk.coEvery
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
+import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.web.server.ResponseStatusException
 import uk.ac.nott.cs.das.cszgbackend.CszgSecurityTestConfig
+import uk.ac.nott.cs.das.cszgbackend.model.study.Report
 import uk.ac.nott.cs.das.cszgbackend.service.StudyReportService
 
 @ExtendWith(SpringExtension::class)
@@ -42,13 +54,88 @@ class ReportsControllerTest {
     @Autowired
     private lateinit var mockMvc: MockMvc
 
+    private lateinit var mockReport: Report
+
+    @BeforeEach
+    fun setUp() {
+        mockReport =
+            Report(title = "Test", pdfData = byteArrayOf(), studies = mutableSetOf(), sentences = mutableSetOf())
+    }
+
     @Nested
     @DisplayName("GET /reports")
-    inner class GetReports
+    inner class GetReports {
+        @Test
+        @WithMockUser("test")
+        fun `should return a 200 response with the reports if all goes well`() {
+            coEvery { service.getAllReports() } returns Either.Right(listOf())
+            mockMvc.perform(get("/reports")).andExpect {
+                status().isOk
+                content().contentType(MediaType.APPLICATION_JSON)
+                content().json("[]")
+            }
+        }
+
+        @Test
+        @WithMockUser("foo")
+        fun `should return a 401 response if the user is unauthenticated`() {
+            coEvery { service.getAllReports() } returns Either.Right(listOf())
+            mockMvc.perform(get("/reports")).andExpect {
+                status().isUnauthorized
+            }
+        }
+
+        @Test
+        @WithMockUser("test")
+        fun `should return a 500 response if the service fails`() {
+            coEvery { service.getAllReports() } returns Either.Left(ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR))
+            mockMvc.perform(get("/reports")).andExpect {
+                status().isInternalServerError
+            }
+        }
+    }
 
     @Nested
     @DisplayName("GET /reports/{id}")
-    inner class GetReportsId
+    inner class GetReportsId {
+        @Test
+        @WithMockUser("test")
+        fun `should return a 200 response with the report if the ID exists`() {
+            coEvery { service.getReport(mockReport.id) } returns Either.Right(mockReport)
+            mockMvc.perform(get("/reports/${mockReport.id}")).andExpect {
+                status().isOk
+                content().contentType(MediaType.APPLICATION_JSON)
+                content().json("""{"id":"${mockReport.id}","title":"Test","pdfData":"","sentences":[]}""")
+            }
+        }
+
+        @Test
+        @WithMockUser("foo")
+        fun `should return a 401 response if the user is unauthenticated`() {
+            coEvery { service.getReport(mockReport.id) } returns Either.Right(mockReport)
+            mockMvc.perform(get("/reports/${mockReport.id}")).andExpect {
+                status().isUnauthorized
+            }
+        }
+
+        @Test
+        @WithMockUser("test")
+        fun `should return a 404 response if the ID doesn't exist`() {
+            coEvery { service.getReport(mockReport.id) } returns Either.Left(ResponseStatusException(HttpStatus.NOT_FOUND))
+            mockMvc.perform(get("/reports/${mockReport.id}")).andExpect {
+                status().isNotFound
+            }
+        }
+
+        @Test
+        @WithMockUser("test")
+        fun `should return a 500 response if the service fails`() {
+            coEvery { service.getReport(mockReport.id) } returns Either.Left(ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR))
+            mockMvc.perform(get("/reports/${mockReport.id}")).andExpect {
+                status().isInternalServerError
+            }
+        }
+    }
 
     @Nested
     @DisplayName("POST /reports")
