@@ -17,23 +17,21 @@
 package uk.ac.nott.cs.das.cszgbackend.controller
 
 import com.ninjasquad.springmockk.MockkBean
-import io.mockk.junit5.MockKExtension
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.test.context.ContextConfiguration
+import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.MockMvc
 import uk.ac.nott.cs.das.cszgbackend.CszgSecurityTestConfig
 import uk.ac.nott.cs.das.cszgbackend.service.StudyReportService
-import kotlin.test.assertNotNull
 
-@ExtendWith(MockKExtension::class)
+@ExtendWith(SpringExtension::class)
 @WebMvcTest(controllers = [ReportsController::class])
 @ContextConfiguration(classes = [CszgSecurityTestConfig::class])
-@DisplayName("Given ReportsController")
+@DisplayName("ReportsController")
 class ReportsControllerTest {
     @MockkBean
     private lateinit var service: StudyReportService
@@ -45,12 +43,18 @@ class ReportsControllerTest {
     private lateinit var mockMvc: MockMvc
 
     @Nested
-    @DisplayName("When the context is instantiated")
-    inner class ContextLoad {
-        @Test
-        @DisplayName("Then the context should be created")
-        fun testContextLoads() {
-            assertNotNull(controller)
-        }
-    }
+    @DisplayName("GET /reports")
+    inner class GetReports
+
+    @Nested
+    @DisplayName("GET /reports/{id}")
+    inner class GetReportsId
+
+    @Nested
+    @DisplayName("POST /reports")
+    inner class PostReports
+
+    @Nested
+    @DisplayName("POST /reports/{reportId}/link/{studyId}")
+    inner class PostReportsLinkStudy
 }
