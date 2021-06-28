@@ -18,6 +18,7 @@ repositories {
 }
 
 dependencies {
+    implementation("nz.ac.waikato.cms.weka:weka-stable:3.8.5")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.0")
     implementation("org.apache.pdfbox:pdfbox:2.0.23")
     implementation("edu.stanford.nlp:stanford-corenlp:4.2.0")
