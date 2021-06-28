@@ -6,6 +6,8 @@ import edu.stanford.nlp.ling.CoreAnnotations
 import edu.stanford.nlp.pipeline.Annotation
 import edu.stanford.nlp.pipeline.AnnotationPipeline
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -24,9 +26,10 @@ class ReportPdfProcessor(
     private val nlpPipeline: AnnotationPipeline
 ) {
 
-    suspend fun processReport(report: Report): Either<ResponseStatusException, Report> = either {
+    suspend fun processReport(report: Report) = either<ResponseStatusException, Report> {
         val docText = loadDocumentText(report.pdfData).bind()
-        val docModel = Json.decodeFromString<PdfJsonDocument>(docText)
+        val docModel = parseDocumentJson(docText).bind()
+
         for ((_, _, _, textObjects) in docModel) {
             val lines = groupLines(textObjects).flatMap { splitOnFont(it) }.flatMap { splitOnSpacing(it) }
             val mainFont = lines.map { it[0] }.map { "${it.fontName}/${it.fontSize}" }.mode()
@@ -54,12 +57,13 @@ class ReportPdfProcessor(
     }
 
     private suspend fun loadDocumentText(data: ByteArray) = withContext(Dispatchers.IO) {
-        try {
-            PDDocument.load(data).use { textStripper.getText(it) }.let { Either.Right(it) }
-        } catch (e: Exception) {
-            Either.Left(ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.localizedMessage, e))
-        }
+        Either.catch { PDDocument.load(data).use { textStripper.getText(it) } }
+            .mapLeft { e -> ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.localizedMessage, e) }
     }
+
+    private fun parseDocumentJson(json: String) =
+        Either.catch { Json.decodeFromString<PdfJsonDocument>(json) }
+            .mapLeft { e -> ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.localizedMessage, e) }
 
     private fun groupLines(objects: List<PdfJsonTextObject>) = objects.groupBy { it.y1 }.values.toList()
 
