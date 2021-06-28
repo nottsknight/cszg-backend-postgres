@@ -46,7 +46,9 @@ class ReportPdfProcessor(
                         fragments = mutableSetOf()
                     )
                 }
-                .forEach { s -> report.sentences.add(s) }
+                .forEach { s ->
+                    report.sentences.add(s)
+                }
         }
         report
     }

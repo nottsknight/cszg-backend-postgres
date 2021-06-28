@@ -27,11 +27,11 @@ class ParticipantUserDetails(private val p: Participant) : UserDetails {
 
     override fun getUsername() = p.username
 
-    override fun isAccountNonExpired() = Calendar.getInstance() <= p.validTo
+    override fun isAccountNonExpired() = p.validTo == null || Calendar.getInstance() <= p.validTo
 
     override fun isAccountNonLocked() = true
 
-    override fun isCredentialsNonExpired() = Calendar.getInstance() <= p.validTo
+    override fun isCredentialsNonExpired() = p.validTo == null || Calendar.getInstance() <= p.validTo
 
-    override fun isEnabled() = Calendar.getInstance() >= p.validFrom
+    override fun isEnabled() = p.validFrom == null || Calendar.getInstance() >= p.validFrom
 }

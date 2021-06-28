@@ -16,130 +16,370 @@
  */
 package uk.ac.nott.cs.das.cszgbackend.service
 
-import arrow.core.Either
+import io.kotest.assertions.arrow.either.shouldBeLeft
+import io.kotest.assertions.arrow.either.shouldBeRight
+import io.kotest.core.spec.style.DescribeSpec
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import io.mockk.every
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit5.MockKExtension
-import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import io.mockk.mockk
 import org.springframework.http.HttpStatus
-import uk.ac.nott.cs.das.cszgbackend.model.participant.*
+import uk.ac.nott.cs.das.cszgbackend.model.participant.Participant
+import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantAti
+import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantAtiRepository
+import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantBioDto
+import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantRepository
+import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantTlx
+import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantTlxRepository
+import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantTrust
+import uk.ac.nott.cs.das.cszgbackend.model.participant.ParticipantTrustRepository
 import java.io.IOException
 import java.util.*
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
-@ExtendWith(MockKExtension::class)
-@DisplayName("Given ParticipantService")
-class ParticipantServiceTest {
-    @MockK
-    private lateinit var participantRepo: ParticipantRepository
+class ParticipantServiceTest : DescribeSpec({
+    describe("ParticipantService") {
+        lateinit var participantRepo: ParticipantRepository
+        lateinit var atiRepo: ParticipantAtiRepository
+        lateinit var tlxRepo: ParticipantTlxRepository
+        lateinit var trustRepo: ParticipantTrustRepository
+        lateinit var service: ParticipantService
 
-    @MockK
-    private lateinit var atiRepo: ParticipantAtiRepository
-
-    @MockK
-    private lateinit var tlxRepo: ParticipantTlxRepository
-
-    @MockK
-    private lateinit var trustRepo: ParticipantTrustRepository
-
-    private lateinit var service: ParticipantService
-    private lateinit var dummyParticipant: Participant
-
-    @BeforeEach
-    fun setUp() {
-        service = ParticipantServiceImpl(participantRepo, atiRepo, tlxRepo, trustRepo)
-        dummyParticipant = Participant(username = "abcd")
-    }
-
-    @Nested
-    @DisplayName("When getAllParticipants")
-    inner class GetAllParticipants {
-        @Nested
-        @DisplayName("When the repository is functioning")
-        inner class GoodRepo {
-            @Test
-            @DisplayName("Then an empty repo returns an empty iterable")
-            fun emptyIterable() = runBlocking {
-                every { participantRepo.findAll() } returns listOf()
-                val ps = service.getAllParticipants()
-                assertTrue { ps is Either.Right }
-                ps as Either.Right
-                assertEquals(0, ps.value.count())
-            }
-
-            @Test
-            @DisplayName("Then a non-empty repo returns a non-empty iterable")
-            fun nonEmptyIterable() = runBlocking {
-                every { participantRepo.findAll() } returns listOf(dummyParticipant)
-                val ps = service.getAllParticipants()
-                assertTrue { ps is Either.Right }
-                ps as Either.Right
-                assertEquals(1, ps.value.count())
-            }
+        beforeEach {
+            participantRepo = mockk()
+            atiRepo = mockk()
+            tlxRepo = mockk()
+            trustRepo = mockk()
+            service = ParticipantServiceImpl(participantRepo, atiRepo, tlxRepo, trustRepo)
         }
 
-        @Nested
-        @DisplayName("When the repository is not functioning")
-        inner class BadRepo {
-            @Test
-            @DisplayName("Then the service returns a 500 error")
-            fun brokenRepo() = runBlocking {
+        describe("#getAllParticipants") {
+            it("should return an iterable of Participants") {
+                every { participantRepo.findAll() } returns listOf(Participant(username = "abcd"))
+
+                val participants = service.getAllParticipants()
+                participants.shouldBeRight {
+                    it.count().shouldBe(1)
+                }
+            }
+
+            it("should return an exception if the repo fails") {
                 every { participantRepo.findAll() } throws IOException()
-                val ps = service.getAllParticipants()
-                assertTrue { ps is Either.Left }
-                ps as Either.Left
-                assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, ps.value.status)
+
+                val participants = service.getAllParticipants()
+                participants.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
             }
         }
-    }
 
-    @Nested
-    @DisplayName("When getParticipant")
-    inner class GetParticipant {
-        @Nested
-        @DisplayName("When the repository is functioning")
-        inner class GoodRepo {
-            @Test
-            @DisplayName("Then an existing UUID returns the participant")
-            fun existingUuid() = runBlocking {
-                every { participantRepo.findById(any()) } returns Optional.of(dummyParticipant)
-                val p = service.getParticipant(UUID.randomUUID())
-                assertTrue { p is Either.Right }
+        describe("#getParticipant") {
+            it("should return the participant if the id exists") {
+                val id = UUID.randomUUID()
+                val p = Participant(id, "abcd")
+                every { participantRepo.findById(id) } returns Optional.of(p)
 
-                p as Either.Right
-                assertEquals(dummyParticipant, p.value)
+                val result = service.getParticipant(id)
+                result.shouldBeRight {
+                    it.id.shouldBe(id)
+                }
             }
 
-            @Test
-            @DisplayName("Then a non-existent UUID returns a 404 error")
-            fun nonExistentUuid() = runBlocking {
+            it("should return an exception if the id doesn't exist") {
                 every { participantRepo.findById(any()) } returns Optional.empty()
-                val p = service.getParticipant(UUID.randomUUID())
-                assertTrue { p is Either.Left }
 
-                p as Either.Left
-                assertEquals(HttpStatus.NOT_FOUND, p.value.status)
+                val result = service.getParticipant(UUID.randomUUID())
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.NOT_FOUND)
+                }
+            }
+
+            it("should return an exception if the repo fails") {
+                every { participantRepo.findById(any()) } throws IOException()
+
+                val result = service.getParticipant(UUID.randomUUID())
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
             }
         }
 
-        @Nested
-        @DisplayName("When the repository is not functioning")
-        inner class BadRepo {
-            @Test
-            @DisplayName("Then the service returns a 500 error")
-            fun brokenRepo() = runBlocking {
+        describe("#createParticipant") {
+            it("should return the participant if creation succeeds") {
+                val p = Participant(username = "abcd")
+                every { participantRepo.save(p) } returns p
+
+                val result = service.createParticipant(p)
+                result.shouldBeRight {
+                    it.shouldBe(p)
+                }
+            }
+
+            it("should return an exception if the repo fails") {
+                every { participantRepo.save(any()) } throws IOException()
+                val p = Participant(username = "abcd")
+
+                val result = service.createParticipant(p)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
+            }
+        }
+
+        describe("#setParticipantAti") {
+            val id = UUID.randomUUID()
+            lateinit var participant: Participant
+            lateinit var ati: ParticipantAti
+
+            beforeEach {
+                participant = Participant(id, "abcd")
+                ati = ParticipantAti(
+                    response1 = 1,
+                    response2 = 1,
+                    response3 = 1,
+                    response4 = 1,
+                    response5 = 1,
+                    response6 = 1,
+                    response7 = 1,
+                    response8 = 1,
+                    response9 = 1
+                )
+            }
+
+            it("should return the participant with the ATI set if all succeeds") {
+                every { participantRepo.findById(id) } returns Optional.of(participant)
+                every { participantRepo.save(any()) } answers { firstArg() }
+                every { atiRepo.save(any()) } answers { firstArg() }
+
+                val result = service.setParticipantAti(id, ati)
+                result.shouldBeRight {
+                    it.ati.shouldNotBeNull().participant.shouldBe(participant)
+                }
+            }
+
+            it("should return an exception if the participant ID doesn't exist") {
+                every { participantRepo.findById(any()) } returns Optional.empty()
+
+                val result = service.setParticipantAti(id, ati)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.NOT_FOUND)
+                }
+            }
+
+            it("should return an exception if saving the ATI fails") {
+                every { participantRepo.findById(id) } returns Optional.of(participant)
+                every { atiRepo.save(any()) } throws IOException()
+
+                val result = service.setParticipantAti(id, ati)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
+            }
+
+            it("should return an exception if saving the participant fails") {
+                every { participantRepo.findById(id) } returns Optional.of(participant)
+                every { atiRepo.save(any()) } answers { firstArg() }
+                every { participantRepo.save(any()) } throws IOException()
+
+                val result = service.setParticipantAti(id, ati)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
+            }
+        }
+
+        describe("#setParticipantBio") {
+            val id = UUID.randomUUID()
+            lateinit var participant: Participant
+            lateinit var bio: ParticipantBioDto
+
+            beforeEach {
+                participant = Participant(id, "abcd")
+                bio = ParticipantBioDto(1, 'f', null)
+            }
+
+            it("should return the participant with the bio set if the ID exists") {
+                every { participantRepo.findById(id) } returns Optional.of(participant)
+                every { participantRepo.save(any()) } answers { firstArg() }
+
+                val result = service.setParticipantBio(id, bio)
+                result.shouldBeRight {
+                    it.id.shouldBe(id)
+                    it.age.shouldBe(bio.age)
+                    it.gender.shouldBe(bio.gender)
+                    it.genderDescription.shouldBeNull()
+                }
+            }
+
+            it("should return an exception if the ID doesn't exist") {
+                every { participantRepo.findById(id) } returns Optional.empty()
+                val result = service.setParticipantBio(id, bio)
+
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.NOT_FOUND)
+                }
+            }
+
+            it("should return an exception if the repo fails when finding the participant") {
                 every { participantRepo.findById(any()) } throws IOException()
-                val p = service.getParticipant(UUID.randomUUID())
-                assertTrue { p is Either.Left }
-                p as Either.Left
-                assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, p.value.status)
+
+                val result = service.setParticipantBio(id, bio)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
+            }
+
+            it("should return an exception if the repo fails when saving the participant") {
+                every { participantRepo.findById(id) } returns Optional.of(participant)
+                every { participantRepo.save(any()) } throws IOException()
+
+                val result = service.setParticipantBio(id, bio)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
+            }
+        }
+
+        describe("#setParticipantTlx") {
+            val id = UUID.randomUUID()
+            lateinit var participant: Participant
+            lateinit var tlx: ParticipantTlx
+
+            beforeEach {
+                participant = Participant(id, "abcd")
+                tlx = ParticipantTlx(
+                    taskNo = 1,
+                    mentalDemand = 1,
+                    physicalDemand = 1,
+                    temporalDemand = 1,
+                    effort = 1,
+                    performance = 1,
+                    frustration = 1
+                )
+            }
+
+            it("should return the participant with TLX set if the ID exists") {
+                every { participantRepo.findById(id) } returns Optional.of(participant)
+                every { tlxRepo.save(any()) } answers { firstArg() }
+                every { participantRepo.save(any()) } answers { firstArg() }
+
+                val result = service.setParticipantTlx(id, tlx)
+                result.shouldBeRight {
+                    it.tlx.shouldContain(tlx)
+                }
+            }
+
+            it("should return an exception if the ID doesn't exist") {
+                every { participantRepo.findById(any()) } returns Optional.empty()
+
+                val result = service.setParticipantTlx(id, tlx)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.NOT_FOUND)
+                }
+            }
+
+            it("should return an exception if getting the participant fails") {
+                every { participantRepo.findById(any()) } throws IOException()
+
+                val result = service.setParticipantTlx(id, tlx)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
+            }
+
+            it("should return an exception if saving the TLX fails") {
+                every { participantRepo.findById(id) } returns Optional.of(participant)
+                every { tlxRepo.save(any()) } throws IOException()
+
+                val result = service.setParticipantTlx(id, tlx)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
+            }
+
+            it("should return an exception if saving the participant fails") {
+                every { participantRepo.findById(id) } returns Optional.of(participant)
+                every { tlxRepo.save(any()) } answers { firstArg() }
+                every { participantRepo.save(any()) } throws IOException()
+
+                val result = service.setParticipantTlx(id, tlx)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
+            }
+        }
+
+        describe("#setParticipantTrust") {
+            val id = UUID.randomUUID()
+            lateinit var participant: Participant
+            lateinit var trust: ParticipantTrust
+
+            beforeEach {
+                participant = Participant(id, "abcd")
+                trust = ParticipantTrust(
+                    taskNo = 1,
+                    response1 = 1,
+                    response2 = 1,
+                    response3 = 1,
+                    response4 = 1,
+                    response5 = 1,
+                    response6 = 1,
+                    response7 = 1,
+                    response8 = 1,
+                    response9 = 1
+                )
+            }
+
+            it("should return the participant with trust set if the ID exists") {
+                every { participantRepo.findById(id) } returns Optional.of(participant)
+                every { trustRepo.save(any()) } answers { firstArg() }
+                every { participantRepo.save(any()) } answers { firstArg() }
+
+                val result = service.setParticipantTrust(id, trust)
+                result.shouldBeRight {
+                    it.trust.shouldContain(trust)
+                }
+            }
+
+            it("should return an exception if the ID doesn't exist") {
+                every { participantRepo.findById(any()) } returns Optional.empty()
+
+                val result = service.setParticipantTrust(id, trust)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.NOT_FOUND)
+                }
+            }
+
+            it("should return an exception if getting the participant fails") {
+                every { participantRepo.findById(any()) } throws IOException()
+
+                val result = service.setParticipantTrust(id, trust)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
+            }
+
+            it("should return an exception if saving the TLX fails") {
+                every { participantRepo.findById(id) } returns Optional.of(participant)
+                every { trustRepo.save(any()) } throws IOException()
+
+                val result = service.setParticipantTrust(id, trust)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
+            }
+
+            it("should return an exception if saving the participant fails") {
+                every { participantRepo.findById(id) } returns Optional.of(participant)
+                every { trustRepo.save(any()) } answers { firstArg() }
+                every { participantRepo.save(any()) } throws IOException()
+
+                val result = service.setParticipantTrust(id, trust)
+                result.shouldBeLeft {
+                    it.status.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
             }
         }
     }
-}
+})

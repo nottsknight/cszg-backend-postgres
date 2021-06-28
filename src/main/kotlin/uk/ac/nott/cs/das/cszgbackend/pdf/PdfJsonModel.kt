@@ -2,6 +2,7 @@ package uk.ac.nott.cs.das.cszgbackend.pdf
 
 import kotlinx.serialization.Serializable
 import kotlin.math.abs
+import kotlin.math.min
 
 @Serializable
 data class PdfJsonDocument(
@@ -32,16 +33,18 @@ data class PdfJsonTextObject(
     var y1: Double,
     var x2: Double,
     var y2: Double
-): Comparable<PdfJsonTextObject> {
+) : Comparable<PdfJsonTextObject> {
 
     override operator fun compareTo(other: PdfJsonTextObject) = when {
-        y1 < other.y1 -> -1
-        y1 == other.y1 -> 0
+        x1 > other.x2 -> 1
+        other.x1 > x2 -> -1
         else -> when {
-            x2 < other.y1 -> -1
-            else -> 1
+            y1 < other.y1 -> -1
+            y1 > other.y1 -> 1
+            else -> 0
         }
     }
 }
 
-infix fun PdfJsonTextObject.distanceTo(other: PdfJsonTextObject) = abs(other.x1 - this.x2)
+infix fun PdfJsonTextObject.distanceTo(other: PdfJsonTextObject) =
+    min(abs(other.x1 - this.x2), abs(other.x2 - this.x1))
