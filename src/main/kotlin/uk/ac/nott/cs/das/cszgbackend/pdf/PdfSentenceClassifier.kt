@@ -1,5 +1,7 @@
 package uk.ac.nott.cs.das.cszgbackend.pdf
 
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.collect
 import org.springframework.stereotype.Component
 import uk.ac.nott.cs.das.cszgbackend.model.study.Sentence
 import weka.classifiers.Classifier
@@ -9,19 +11,39 @@ import weka.core.Instances
 
 @Component
 class PdfSentenceClassifier {
-    private lateinit var classifier: Classifier
+    private lateinit var classifiers: Array<Classifier>
 
     suspend fun classifySentences(sentences: Iterable<Sentence>) {
-        val instances = Instances("sentence-data", ATTRIBUTES, sentences.count())
-        sentences
-            .map { s ->
-                val inst = DenseInstance(12)
-                inst.setValue(ATTR_TEXT, s.content)
-                inst
-            }.forEach { inst ->
-                inst.setDataset(instances)
-                instances.add(inst)
+        val datasets = generateDatasets(sentences.asSequence())
+        for (i in (0..10)) {
+            datasets[i].asFlow().collect { inst -> classifiers[i].classifyInstance(inst) }
+        }
+    }
+
+    private fun generateDatasets(sentences: Sequence<Sentence>): Array<Instances> {
+        val numSentences = sentences.count()
+
+        // create datasets
+        val datasets =
+            Array(11) { i ->
+                Instances(
+                    "class-$i",
+                    arrayListOf(ATTR_TEXT, ATTRIBUTES[i + 1]),
+                    numSentences
+                ).apply { setClassIndex(1) }
             }
+
+        // add sentences
+        sentences
+            .map { s -> Array(11) { DenseInstance(2).apply { setValue(ATTR_TEXT, s.content) } } }
+            .forEach { insts ->
+                for (i in (0..10)) {
+                    insts[i].setDataset(datasets[i])
+                    datasets[i].add(insts[i])
+                }
+            }
+
+        return datasets
     }
 
     companion object {
