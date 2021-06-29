@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.net.URI
 
 plugins {
     id("org.springframework.boot") version "2.4.5"
@@ -15,9 +16,12 @@ java.sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
     mavenCentral()
+    maven { url = URI("https://jitpack.io") }
 }
 
 dependencies {
+    implementation("nz.ac.waikato.cms.weka:weka-stable:3.8.5")
+    implementation("com.github.Waikato:wekaDeeplearning4j:v1.7.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.0")
     implementation("org.apache.pdfbox:pdfbox:2.0.23")
     implementation("edu.stanford.nlp:stanford-corenlp:4.2.0")

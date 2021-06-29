@@ -21,7 +21,8 @@ import uk.ac.nott.cs.das.cszgx.pairs
 @Component
 class ReportPdfProcessor(
     private val textStripper: PdfJsonTextStripper,
-    private val nlpPipeline: AnnotationPipeline
+    private val nlpPipeline: AnnotationPipeline,
+    private val classifier: PdfSentenceClassifier
 ) {
 
     suspend fun processReport(report: Report): Either<ResponseStatusException, Report> = either {
