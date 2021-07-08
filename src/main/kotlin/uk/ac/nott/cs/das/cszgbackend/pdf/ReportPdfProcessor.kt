@@ -13,6 +13,7 @@ import org.apache.pdfbox.pdmodel.PDDocument
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.server.ResponseStatusException
+import uk.ac.nott.cs.das.cszgbackend.classification.PdfSentenceClassifier
 import uk.ac.nott.cs.das.cszgbackend.model.study.Report
 import uk.ac.nott.cs.das.cszgbackend.model.study.Sentence
 import uk.ac.nott.cs.das.cszgx.mode

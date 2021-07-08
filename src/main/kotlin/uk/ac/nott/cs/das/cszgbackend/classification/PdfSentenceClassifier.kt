@@ -1,4 +1,4 @@
-package uk.ac.nott.cs.das.cszgbackend.pdf
+package uk.ac.nott.cs.das.cszgbackend.classification
 
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collect
@@ -13,8 +13,8 @@ import weka.core.Instances
 class PdfSentenceClassifier {
     private lateinit var classifiers: Array<Classifier>
 
-    suspend fun classifySentences(sentences: Iterable<Sentence>) {
-        val datasets = generateDatasets(sentences.asSequence())
+    suspend fun classifySentences(sentences: Sequence<Sentence>) {
+        val datasets = generateDatasets(sentences)
         for (i in (0..10)) {
             datasets[i].asFlow().collect { inst -> classifiers[i].classifyInstance(inst) }
         }
