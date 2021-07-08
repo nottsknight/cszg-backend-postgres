@@ -30,6 +30,6 @@ class StopwordsAnnotator : Annotator {
     override fun requires() = mutableSetOf(CoreAnnotations.TokensAnnotation::class.java)
 }
 
-class IsStopwordAnnotation(var value: Boolean) : CoreAnnotation<Boolean> {
+class IsStopwordAnnotation : CoreAnnotation<Boolean> {
     override fun getType() = Boolean::class.java
 }
