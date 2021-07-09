@@ -30,7 +30,22 @@ class StanfordTokenizer : Tokenizer() {
             .tokens()
             .asSequence()
             .mapNotNull { t -> if (t[IsStopwordAnnotation::class.java]) null else t }
-            .map { t -> t.ner() ?: t.lemma() }
-            .let { ts -> tokens = ts.toList() }
-            .also { nextToken = 0 }
+            .map { t ->
+                when (t.ner()) {
+                    "PERSON",
+                    "ORGANIZATION",
+                    "MONEY",
+                    "NUMBER",
+                    "PERCENT",
+                    "DATE",
+                    "TIME",
+                    "DURATION" -> "--${t.ner()}--"
+                    else -> t.lemma()
+                }
+            }
+            .toList()
+            .let { ts ->
+                tokens = ts
+                nextToken = 0
+            }
 }
