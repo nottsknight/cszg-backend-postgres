@@ -1,8 +1,7 @@
-package uk.ac.nott.cs.das.cszgbackend.classification
+package weka.core.tokenizers
 
 import edu.stanford.nlp.pipeline.CoreDocument
 import edu.stanford.nlp.pipeline.StanfordCoreNLP
-import weka.core.tokenizers.Tokenizer
 import java.util.*
 
 class StanfordTokenizer : Tokenizer() {
@@ -28,7 +27,6 @@ class StanfordTokenizer : Tokenizer() {
         CoreDocument(s)
             .apply { nlpPipeline.annotate(this) }
             .tokens()
-            .mapNotNull { t -> if (t[IsStopwordAnnotation::class.java]) null else t }
             .map { t ->
                 when (t.ner()) {
                     "PERSON",

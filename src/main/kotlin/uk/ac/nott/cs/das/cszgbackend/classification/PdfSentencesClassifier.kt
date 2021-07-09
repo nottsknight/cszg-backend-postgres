@@ -4,17 +4,17 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collect
 import org.springframework.stereotype.Component
 import uk.ac.nott.cs.das.cszgbackend.model.study.Sentence
-import weka.classifiers.Classifier
+import weka.classifiers.meta.PicoSentenceClassifier
 import weka.core.Attribute
 import weka.core.DenseInstance
 import weka.core.Instances
 
 @Component
-class PdfSentenceClassifier {
-    private lateinit var classifiers: Array<Classifier>
-
+class PdfSentencesClassifier {
     suspend fun classifySentences(sentences: Sequence<Sentence>) {
         val datasets = generateDatasets(sentences)
+        val classifiers = CLASS_NAMES.mapIndexed { i, c -> PicoSentenceClassifier(c, datasets[i]) }
+
         for (i in (0..10)) {
             datasets[i].asFlow().collect { inst -> classifiers[i].classifyInstance(inst) }
         }
@@ -47,6 +47,20 @@ class PdfSentenceClassifier {
     }
 
     companion object {
+        private val CLASS_NAMES = arrayOf(
+            "allocation",
+            "blinding",
+            "duration",
+            "funding",
+            "diagnosis",
+            "number",
+            "age",
+            "sex",
+            "history",
+            "intervention",
+            "outcome"
+        )
+
         private val ATTR_TEXT = Attribute("text", true)
         private val ATTR_ALLOCATION = Attribute("allocation")
         private val ATTR_BLINDING = Attribute("blinding")
