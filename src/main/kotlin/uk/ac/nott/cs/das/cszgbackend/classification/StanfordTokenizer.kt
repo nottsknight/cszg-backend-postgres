@@ -28,7 +28,6 @@ class StanfordTokenizer : Tokenizer() {
         CoreDocument(s)
             .apply { nlpPipeline.annotate(this) }
             .tokens()
-            .asSequence()
             .mapNotNull { t -> if (t[IsStopwordAnnotation::class.java]) null else t }
             .map { t ->
                 when (t.ner()) {
@@ -43,7 +42,25 @@ class StanfordTokenizer : Tokenizer() {
                     else -> t.lemma()
                 }
             }
-            .toList()
+            .toMutableList()
+            .let { ts ->
+                var currentNer: String? = null
+                val it = ts.iterator()
+                while (it.hasNext()) {
+                    when (val t = it.next()) {
+                        "--PERSON--",
+                        "--ORGANIZATION--",
+                        "--MONEY--",
+                        "--NUMBER--",
+                        "--PERCENT--",
+                        "--DATE--",
+                        "--TIME--",
+                        "--DURATION--" -> if (t == currentNer) it.remove() else currentNer = t
+                        else -> currentNer = null
+                    }
+                }
+                ts
+            }
             .let { ts ->
                 tokens = ts
                 nextToken = 0
